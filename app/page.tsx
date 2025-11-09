@@ -6,7 +6,7 @@ export default function Home() {
 	return (
 		<div className="min-h-screen bg-background font-sans">
 			<Navbar />
-			<main className="flex items-center justify-center pb-20">
+			<main>
 				<Hero />
 			</main>
 			<Footer />

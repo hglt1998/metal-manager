@@ -4,11 +4,10 @@ import { ArrowRight, Package, Shield, Zap } from "lucide-react";
 
 const Hero = () => {
 	return (
-		<div className="relative isolate overflow-hidden">
-			{/* Background decoration */}
-			<div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
-				<div className="relative left-[calc(50%-11rem)] aspect-1155/678 w-144.5 -translate-x-1/2 rotate-30 bg-linear-to-tr from-primary to-primary/30 opacity-20 sm:left-[calc(50%-30rem)] sm:w-288.75" />
-			</div>
+		<div className="relative isolate overflow-hidden bg-background">
+			{/* Background gradient - full width */}
+			<div className="absolute inset-0 -z-10 bg-linear-to-b from-primary/10 via-background to-background" />
+			<div className="absolute inset-0 -z-10 bg-linear-to-tr from-primary/5 to-transparent" />
 
 			<div className="mx-auto max-w-7xl px-6 pb-24 pt-10 sm:pb-32 lg:flex lg:px-8 lg:py-40">
 				<div className="mx-auto max-w-2xl shrink-0 lg:mx-0 lg:max-w-xl lg:pt-8">
@@ -79,11 +78,6 @@ const Hero = () => {
 						</div>
 					</div>
 				</div>
-			</div>
-
-			{/* Bottom background decoration */}
-			<div className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]" aria-hidden="true">
-				<div className="relative left-[calc(50%+3rem)] aspect-1155/678 w-144.5 -translate-x-1/2 bg-linear-to-tr from-primary to-primary/30 opacity-20 sm:left-[calc(50%+36rem)] sm:w-288.75" />
 			</div>
 		</div>
 	);
