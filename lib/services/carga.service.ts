@@ -8,7 +8,7 @@ type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type CargaInsert = Database["public"]["Tables"]["cargas"]["Insert"];
 
 export class CargaService {
-	constructor(private supabase: SupabaseClient<Database>) {}
+	constructor(private supabase: SupabaseClient) {}
 
 	async getMateriales(): Promise<Material[]> {
 		const { data, error } = await this.supabase.from("materiales").select("*").order("nombre");
