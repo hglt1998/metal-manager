@@ -10,15 +10,12 @@ const Navbar = () => {
 				<div className="flex h-16 items-center justify-between">
 					<Link href="/" className="flex items-center gap-2">
 						<Package className="h-6 w-6" />
-						<span className="text-xl font-bold">Collector Manager</span>
+						<span className="text-xl font-bold">CM</span>
 					</Link>
 					<div className="flex items-center gap-4">
-						<Link href="/help" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-							Ayuda
-						</Link>
 						<ThemeToggle />
 						<Button asChild variant="default" size="sm">
-							<Link href="/login">Iniciar Sesión</Link>
+							<Link href="/login">Accede</Link>
 						</Button>
 					</div>
 				</div>
