@@ -6,7 +6,7 @@ export type Json =
 	| { [key: string]: Json | undefined }
 	| Json[];
 
-export type UserRole = "admin" | "operario";
+export type UserRole = "admin" | "operario" | "planificador_rutas";
 export type UnidadMedida = "Kilogramos" | "Toneladas";
 
 export interface Database {

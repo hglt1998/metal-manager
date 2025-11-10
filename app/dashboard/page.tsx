@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuth } from "@/components/AuthProvider";
-import DashboardNav from "@/components/DashboardNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CargaFormDialog } from "@/components/CargaFormDialog";
 import { Package, Archive, Activity } from "lucide-react";
@@ -34,26 +33,23 @@ export default function DashboardPage() {
 	];
 
 	return (
-		<div className="min-h-screen bg-background">
-			<DashboardNav />
-			<main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-				<div className="mb-8 sm:mb-10 flex items-start justify-between">
-					<div>
-						<h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Dashboard</h1>
-						<p className="mt-2 text-base sm:text-lg text-muted-foreground">Bienvenido de nuevo, {profile?.full_name || profile?.email}</p>
-					</div>
-					{profile && (
-						<CargaFormDialog userRole={profile.role} userId={profile.id} />
-					)}
+		<>
+			<div className="mb-8 sm:mb-10 flex items-start justify-between">
+				<div>
+					<h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Dashboard</h1>
+					<p className="mt-2 text-base sm:text-lg text-muted-foreground">Bienvenido de nuevo, {profile?.full_name || profile?.email}</p>
 				</div>
+				{profile && (
+					<CargaFormDialog userRole={profile.role} userId={profile.id} />
+				)}
+			</div>
 
-				<div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-					{widgets.map((w, i) => (
-						<WidgetCard props={w} key={i} />
-					))}
-				</div>
-			</main>
-		</div>
+			<div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+				{widgets.map((w, i) => (
+					<WidgetCard props={w} key={i} />
+				))}
+			</div>
+		</>
 	);
 }
 

@@ -6,7 +6,7 @@ import { useAuth } from "./AuthProvider";
 import ThemeToggle from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, LayoutDashboard, Shield, Menu, X, Package } from "lucide-react";
+import { LogOut, LayoutDashboard, Shield, Menu, X, Package, Truck, MapPin, Package2, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -15,6 +15,8 @@ export default function DashboardNav() {
 	const router = useRouter();
 	const pathname = usePathname();
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+	const canManageData = profile && ['admin', 'planificador_rutas'].includes(profile.role);
 
 	const handleSignOut = async () => {
 		try {
@@ -48,6 +50,50 @@ export default function DashboardNav() {
 								<LayoutDashboard className="h-4 w-4" />
 								Dashboard
 							</Link>
+							<Link
+								href="/dashboard/rutas"
+								className={cn(
+									"inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground",
+									pathname?.startsWith("/dashboard/rutas") ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+								)}
+							>
+								<Route className="h-4 w-4" />
+								Rutas
+							</Link>
+							{canManageData && (
+								<>
+									<Link
+										href="/dashboard/vehiculos"
+										className={cn(
+											"inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground",
+											pathname?.startsWith("/dashboard/vehiculos") ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+										)}
+									>
+										<Truck className="h-4 w-4" />
+										Vehículos
+									</Link>
+									<Link
+										href="/dashboard/centros"
+										className={cn(
+											"inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground",
+											pathname?.startsWith("/dashboard/centros") ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+										)}
+									>
+										<MapPin className="h-4 w-4" />
+										Centros
+									</Link>
+									<Link
+										href="/dashboard/materiales"
+										className={cn(
+											"inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground",
+											pathname?.startsWith("/dashboard/materiales") ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+										)}
+									>
+										<Package2 className="h-4 w-4" />
+										Materiales
+									</Link>
+								</>
+							)}
 							{isAdmin && (
 								<Link
 									href="/admin"
@@ -102,6 +148,54 @@ export default function DashboardNav() {
 							<LayoutDashboard className="h-4 w-4" />
 							Dashboard
 						</Link>
+						<Link
+							href="/dashboard/rutas"
+							onClick={() => setMobileMenuOpen(false)}
+							className={cn(
+								"flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+								pathname?.startsWith("/dashboard/rutas") ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+							)}
+						>
+							<Route className="h-4 w-4" />
+							Rutas
+						</Link>
+						{canManageData && (
+							<>
+								<Link
+									href="/dashboard/vehiculos"
+									onClick={() => setMobileMenuOpen(false)}
+									className={cn(
+										"flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+										pathname?.startsWith("/dashboard/vehiculos") ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+									)}
+								>
+									<Truck className="h-4 w-4" />
+									Vehículos
+								</Link>
+								<Link
+									href="/dashboard/centros"
+									onClick={() => setMobileMenuOpen(false)}
+									className={cn(
+										"flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+										pathname?.startsWith("/dashboard/centros") ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+									)}
+								>
+									<MapPin className="h-4 w-4" />
+									Centros
+								</Link>
+								<Link
+									href="/dashboard/materiales"
+									onClick={() => setMobileMenuOpen(false)}
+									className={cn(
+										"flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
+										pathname?.startsWith("/dashboard/materiales") ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+									)}
+								>
+									<Package2 className="h-4 w-4" />
+									Materiales
+								</Link>
+							</>
+						)}
 						{isAdmin && (
 							<Link
 								href="/admin"

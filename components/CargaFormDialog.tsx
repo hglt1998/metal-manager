@@ -7,13 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import type { UnidadMedida } from "@/types/database";
+import type { UnidadMedida, UserRole } from "@/types/database";
 import { useCargaForm } from "@/hooks/useCargaForm";
 import { useCargaData } from "@/hooks/useCargaData";
 import { useCargaSubmit } from "@/hooks/useCargaSubmit";
 
 interface CargaFormDialogProps {
-	userRole: "admin" | "operario";
+	userRole: UserRole;
 	userId: string;
 }
 

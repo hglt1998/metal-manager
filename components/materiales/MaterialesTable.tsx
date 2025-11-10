@@ -1,0 +1,189 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2, Loader2 } from "lucide-react";
+import { MaterialEditDialog } from "./MaterialEditDialog";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+type Material = {
+	id: string;
+	nombre: string;
+	descripcion: string | null;
+	activo: boolean;
+	created_at: string;
+};
+
+export function MaterialesTable() {
+	const [materiales, setMateriales] = useState<Material[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [deleteId, setDeleteId] = useState<string | null>(null);
+	const [deleting, setDeleting] = useState(false);
+	const supabase = createClient();
+
+	const fetchMateriales = async () => {
+		setLoading(true);
+		const { data, error } = await supabase
+			.from("materiales")
+			.select("*")
+			.order("nombre", { ascending: true });
+
+		if (error) {
+			console.error("Error al cargar materiales:", error);
+		} else {
+			setMateriales(data || []);
+		}
+		setLoading(false);
+	};
+
+	useEffect(() => {
+		fetchMateriales();
+	}, []);
+
+	const handleDelete = async () => {
+		if (!deleteId) return;
+
+		setDeleting(true);
+		const { error } = await supabase
+			.from("materiales")
+			.delete()
+			.eq("id", deleteId);
+
+		if (error) {
+			console.error("Error al eliminar material:", error);
+			alert("Error al eliminar el material. Puede que esté siendo usado en alguna ruta.");
+		} else {
+			await fetchMateriales();
+		}
+
+		setDeleting(false);
+		setDeleteId(null);
+	};
+
+	if (loading) {
+		return (
+			<Card>
+				<CardContent className="flex items-center justify-center py-10">
+					<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+				</CardContent>
+			</Card>
+		);
+	}
+
+	if (materiales.length === 0) {
+		return (
+			<Card>
+				<CardHeader>
+					<CardTitle>No hay materiales</CardTitle>
+					<CardDescription>
+						Comienza agregando tu primer material usando el botón "Nuevo Material" arriba.
+					</CardDescription>
+				</CardHeader>
+			</Card>
+		);
+	}
+
+	return (
+		<>
+			<Card>
+				<CardHeader>
+					<CardTitle>Materiales registrados</CardTitle>
+					<CardDescription>
+						Total de {materiales.length} material{materiales.length !== 1 ? "es" : ""}
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<div className="rounded-md border">
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>Nombre</TableHead>
+									<TableHead>Descripción</TableHead>
+									<TableHead className="text-center">Estado</TableHead>
+					<TableHead className="text-right">Acciones</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{materiales.map((material) => (
+									<TableRow key={material.id}>
+										<TableCell className="font-medium">{material.nombre}</TableCell>
+										<TableCell className="text-muted-foreground">
+											{material.descripcion || "Sin descripción"}
+										</TableCell>
+										<TableCell className="text-center">
+											<Badge variant={material.activo ? "default" : "secondary"}>
+												{material.activo ? "Activo" : "Inactivo"}
+											</Badge>
+										</TableCell>
+										<TableCell className="text-right">
+											<div className="flex items-center justify-end gap-2">
+												<MaterialEditDialog material={material} onSuccess={fetchMateriales} />
+												<Button
+													variant="ghost"
+													size="icon"
+													onClick={() => setDeleteId(material.id)}
+													className="h-8 w-8 text-destructive hover:text-destructive"
+												>
+													<Trash2 className="h-4 w-4" />
+												</Button>
+											</div>
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</div>
+				</CardContent>
+			</Card>
+
+			<AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>¿Eliminar material?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Esta acción no se puede deshacer. El material será eliminado permanentemente.
+							Si el material está siendo usado en alguna ruta, no podrá ser eliminado.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={handleDelete}
+							disabled={deleting}
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+						>
+							{deleting ? (
+								<>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									Eliminando...
+								</>
+							) : (
+								"Eliminar"
+							)}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</>
+	);
+}
