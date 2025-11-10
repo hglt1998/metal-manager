@@ -14,15 +14,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Pencil, Loader2 } from "lucide-react";
 
 type Material = {
 	id: string;
 	nombre: string;
-	descripcion: string | null;
-	activo: boolean;
+	precio_kg: number;
 };
 
 type MaterialEditDialogProps = {
@@ -35,8 +32,7 @@ export function MaterialEditDialog({ material, onSuccess }: MaterialEditDialogPr
 	const [loading, setLoading] = useState(false);
 	const [formData, setFormData] = useState({
 		nombre: material.nombre,
-		descripcion: material.descripcion || "",
-		activo: material.activo,
+		precio_kg: material.precio_kg,
 	});
 	const supabase = createClient();
 
@@ -48,8 +44,7 @@ export function MaterialEditDialog({ material, onSuccess }: MaterialEditDialogPr
 			.from("materiales")
 			.update({
 				nombre: formData.nombre,
-				descripcion: formData.descripcion || null,
-				activo: formData.activo,
+				precio_kg: formData.precio_kg,
 			})
 			.eq("id", material.id);
 
@@ -94,27 +89,18 @@ export function MaterialEditDialog({ material, onSuccess }: MaterialEditDialogPr
 							/>
 						</div>
 						<div className="grid gap-2">
-							<Label htmlFor="edit-descripcion">Descripción</Label>
-							<Textarea
-								id="edit-descripcion"
-								placeholder="Descripción opcional del material"
-								value={formData.descripcion}
-								onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-								disabled={loading}
-								rows={3}
-							/>
-						</div>
-						<div className="flex items-center justify-between">
-							<div className="space-y-0.5">
-								<Label htmlFor="edit-activo">Material activo</Label>
-								<div className="text-sm text-muted-foreground">
-									Los materiales inactivos no aparecerán en las opciones de rutas
-								</div>
-							</div>
-							<Switch
-								id="edit-activo"
-								checked={formData.activo}
-								onCheckedChange={(checked) => setFormData({ ...formData, activo: checked })}
+							<Label htmlFor="edit-precio_kg">
+								Precio por kg (€/kg) <span className="text-destructive">*</span>
+							</Label>
+							<Input
+								id="edit-precio_kg"
+								type="number"
+								step="0.01"
+								min="0"
+								placeholder="0.00"
+								value={formData.precio_kg}
+								onChange={(e) => setFormData({ ...formData, precio_kg: parseFloat(e.target.value) || 0 })}
+								required
 								disabled={loading}
 							/>
 						</div>

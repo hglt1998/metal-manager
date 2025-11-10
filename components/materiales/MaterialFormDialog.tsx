@@ -3,32 +3,23 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Plus, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 
-export function MaterialFormDialog() {
+interface MaterialFormDialogProps {
+	onSuccess?: () => void;
+}
+
+export function MaterialFormDialog({ onSuccess }: MaterialFormDialogProps) {
 	const [open, setOpen] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [formData, setFormData] = useState({
 		nombre: "",
-		descripcion: "",
-		activo: true,
+		precio_kg: 0
 	});
 	const supabase = createClient();
-	const router = useRouter();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -37,18 +28,20 @@ export function MaterialFormDialog() {
 		const { error } = await supabase.from("materiales").insert([
 			{
 				nombre: formData.nombre,
-				descripcion: formData.descripcion || null,
-				activo: formData.activo,
-			},
+				precio_kg: formData.precio_kg
+			}
 		]);
 
 		if (error) {
 			console.error("Error al crear material:", error);
 			alert("Error al crear el material");
 		} else {
-			setFormData({ nombre: "", descripcion: "", activo: true });
+			setFormData({ nombre: "", precio_kg: 0 });
 			setOpen(false);
-			router.refresh();
+			// Llamar al callback onSuccess si existe
+			if (onSuccess) {
+				onSuccess();
+			}
 		}
 
 		setLoading(false);
@@ -66,9 +59,7 @@ export function MaterialFormDialog() {
 				<form onSubmit={handleSubmit}>
 					<DialogHeader>
 						<DialogTitle>Nuevo Material</DialogTitle>
-						<DialogDescription>
-							Agrega un nuevo tipo de material para las rutas de recogida.
-						</DialogDescription>
+						<DialogDescription>Agrega un nuevo tipo de material para las rutas de recogida.</DialogDescription>
 					</DialogHeader>
 					<div className="grid gap-4 py-4">
 						<div className="grid gap-2">
@@ -85,32 +76,23 @@ export function MaterialFormDialog() {
 							/>
 						</div>
 						<div className="grid gap-2">
-							<Label htmlFor="descripcion">Descripción</Label>
-							<Textarea
-								id="descripcion"
-								placeholder="Descripción opcional del material"
-								value={formData.descripcion}
-								onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-								disabled={loading}
-								rows={3}
-							/>
-						</div>
-						<div className="flex items-center justify-between">
-							<div className="space-y-0.5">
-								<Label htmlFor="activo">Material activo</Label>
-								<div className="text-sm text-muted-foreground">
-									Los materiales inactivos no aparecerán en las opciones de rutas
-								</div>
-							</div>
-							<Switch
-								id="activo"
-								checked={formData.activo}
-								onCheckedChange={(checked) => setFormData({ ...formData, activo: checked })}
+							<Label htmlFor="precio_kg">
+								Precio por kg (€/kg) <span className="text-destructive">*</span>
+							</Label>
+							<Input
+								id="precio_kg"
+								type="number"
+								step="0.01"
+								min="0"
+								placeholder="0.00"
+								value={formData.precio_kg}
+								onChange={(e) => setFormData({ ...formData, precio_kg: parseFloat(e.target.value) || 0 })}
+								required
 								disabled={loading}
 							/>
 						</div>
 					</div>
-					<DialogFooter>
+					<DialogFooter className="gap-2">
 						<Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>
 							Cancelar
 						</Button>

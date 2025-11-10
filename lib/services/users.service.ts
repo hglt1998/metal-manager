@@ -40,28 +40,26 @@ export class UsersService {
 		// Filtrar campos que no se pueden actualizar directamente
 		const safeUpdates: { full_name?: string | null; role?: Profile["role"] } = {};
 
-		
-		
 		if (updates.full_name !== undefined) {
 			safeUpdates.full_name = updates.full_name;
 		}
 		if (updates.role !== undefined) {
 			safeUpdates.role = updates.role;
 		}
-		
-		console.log(userId);
-		const { data: updatedUser, error } = await this.supabase.from("profiles").update(safeUpdates).eq("id", userId).select();
+
+		// Realizar la actualización con select("*") para obtener los datos actualizados
+		const { data, error } = await this.supabase
+			.from("profiles")
+			.update(safeUpdates)
+			.eq("id", userId)
+			.select("*")
+			.single();
 
 		if (error) {
 			throw new Error(`Error al actualizar usuario: ${error.message}`);
 		}
 
-		// Obtener el usuario actualizado
-
-		console.log(updatedUser);
-		
-
-		return updatedUser;
+		return data;
 	}
 
 	/**
