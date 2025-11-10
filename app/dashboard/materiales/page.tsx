@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { MaterialesTable } from "@/components/materiales/MaterialesTable";
 import { MaterialFormDialog } from "@/components/materiales/MaterialFormDialog";
@@ -7,11 +8,18 @@ import { Package2 } from "lucide-react";
 
 export default function MaterialesPage() {
 	const { profile } = useAuth();
+	const tableRefreshRef = useRef<(() => void) | null>(null);
 
 	// Solo admins y planificadores pueden acceder
 	if (!profile || !['admin', 'planificador_rutas'].includes(profile.role)) {
 		return <p className="text-muted-foreground">No tienes permisos para acceder a esta página.</p>;
 	}
+
+	const handleMaterialCreated = () => {
+		if (tableRefreshRef.current) {
+			tableRefreshRef.current();
+		}
+	};
 
 	return (
 		<>
@@ -25,10 +33,10 @@ export default function MaterialesPage() {
 						Gestiona los tipos de materiales a recoger
 					</p>
 				</div>
-				<MaterialFormDialog />
+				<MaterialFormDialog onSuccess={handleMaterialCreated} />
 			</div>
 
-			<MaterialesTable />
+			<MaterialesTable onRefreshReady={(refreshFn) => { tableRefreshRef.current = refreshFn; }} />
 		</>
 	);
 }

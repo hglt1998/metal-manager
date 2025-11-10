@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useUsers } from "@/hooks/useUsers";
@@ -16,15 +16,28 @@ type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export default function AdminPage() {
 	const { profile, loading: authLoading, isAdmin } = useAuth();
 	const router = useRouter();
-	const { users, loading, updateUser } = useUsers({ autoLoad: isAdmin });
+
+	// Memorizar las opciones para evitar recreación en cada render
+	const userOptions = useMemo(() => ({ autoLoad: false }), []);
+	const { users, loading, updateUser, loadUsers } = useUsers(userOptions);
+
 	const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
 	const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-	// Redirigir si no es admin
-	if (!authLoading && !isAdmin) {
-		router.push("/dashboard");
-		return null;
-	}
+	// Cargar usuarios cuando el usuario esté autenticado y sea admin
+	useEffect(() => {
+		if (!authLoading && isAdmin) {
+			loadUsers();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [authLoading, isAdmin]); // loadUsers es estable, no necesita estar en dependencias
+
+	// Redirigir si no es admin (después de todos los hooks)
+	useEffect(() => {
+		if (!authLoading && !isAdmin) {
+			router.push("/dashboard");
+		}
+	}, [authLoading, isAdmin, router]);
 
 	const handleEditUser = (user: Profile) => {
 		setSelectedUser(user);
@@ -35,6 +48,7 @@ export default function AdminPage() {
 		await updateUser(userId, updates);
 	};
 
+	// Mostrar loading mientras carga la autenticación o si no es admin
 	if (authLoading || !isAdmin) {
 		return (
 			<div className="flex min-h-screen items-center justify-center bg-background">

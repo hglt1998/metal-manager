@@ -11,7 +11,6 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Loader2 } from "lucide-react";
 import { MaterialEditDialog } from "./MaterialEditDialog";
@@ -29,12 +28,15 @@ import {
 type Material = {
 	id: string;
 	nombre: string;
-	descripcion: string | null;
-	activo: boolean;
+	precio_kg: number;
 	created_at: string;
 };
 
-export function MaterialesTable() {
+interface MaterialesTableProps {
+	onRefreshReady?: (refreshFn: () => void) => void;
+}
+
+export function MaterialesTable({ onRefreshReady }: MaterialesTableProps) {
 	const [materiales, setMateriales] = useState<Material[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -58,6 +60,10 @@ export function MaterialesTable() {
 
 	useEffect(() => {
 		fetchMateriales();
+		// Exponer la función de refresh al componente padre
+		if (onRefreshReady) {
+			onRefreshReady(fetchMateriales);
+		}
 	}, []);
 
 	const handleDelete = async () => {
@@ -118,23 +124,15 @@ export function MaterialesTable() {
 							<TableHeader>
 								<TableRow>
 									<TableHead>Nombre</TableHead>
-									<TableHead>Descripción</TableHead>
-									<TableHead className="text-center">Estado</TableHead>
-					<TableHead className="text-right">Acciones</TableHead>
+									<TableHead>Precio (€/kg)</TableHead>
+									<TableHead className="text-right">Acciones</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
 								{materiales.map((material) => (
 									<TableRow key={material.id}>
 										<TableCell className="font-medium">{material.nombre}</TableCell>
-										<TableCell className="text-muted-foreground">
-											{material.descripcion || "Sin descripción"}
-										</TableCell>
-										<TableCell className="text-center">
-											<Badge variant={material.activo ? "default" : "secondary"}>
-												{material.activo ? "Activo" : "Inactivo"}
-											</Badge>
-										</TableCell>
+										<TableCell>{material.precio_kg.toFixed(2)} €</TableCell>
 										<TableCell className="text-right">
 											<div className="flex items-center justify-end gap-2">
 												<MaterialEditDialog material={material} onSuccess={fetchMateriales} />

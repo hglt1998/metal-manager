@@ -67,7 +67,8 @@ export function useUsers(options: UseUsersOptions = { autoLoad: true }) {
 		if (options.autoLoad) {
 			loadUsers();
 		}
-	}, [options.autoLoad, loadUsers]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [loadUsers]); // Solo dependemos de loadUsers, no del objeto options completo
 
 	return {
 		users,

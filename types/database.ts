@@ -42,23 +42,23 @@ export interface Database {
 				Row: {
 					id: string;
 					nombre: string;
-					densidad: number;
 					precio_kg: number;
 					created_at: string;
+					updated_at: string;
 				};
 				Insert: {
 					id?: string;
 					nombre: string;
-					densidad: number;
-					precio_kg: number;
+					precio_kg?: number;
 					created_at?: string;
+					updated_at?: string;
 				};
 				Update: {
 					id?: string;
 					nombre?: string;
-					densidad?: number;
 					precio_kg?: number;
 					created_at?: string;
+					updated_at?: string;
 				};
 			};
 			ubicaciones_recogida: {
