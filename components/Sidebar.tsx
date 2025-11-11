@@ -6,7 +6,7 @@ import { useAuth } from "./AuthProvider";
 import ThemeToggle from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, LayoutDashboard, Shield, Menu, Package, Truck, MapPin, Package2, Route, ChevronLeft, ChevronRight } from "lucide-react";
+import { LogOut, LayoutDashboard, Shield, Menu, Package, Truck, Package2, Route, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -53,7 +53,7 @@ export default function Sidebar() {
 		},
 		{
 			href: "/dashboard/centros",
-			icon: MapPin,
+			icon: Building2,
 			label: "Centros",
 			show: canManageData
 		},

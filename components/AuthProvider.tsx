@@ -33,34 +33,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		const loadProfile = async (userId: string) => {
-			const { data, error } = await supabase.from("profiles").select("*").eq("id", userId);
+			try {
+				const { data, error } = await supabase
+					.from("profiles")
+					.select("*")
+					.eq("id", userId)
+					.single();
 
-			if (error) {
-				console.error("Error loading profile:", error);
+				if (error) {
+					console.error("[AuthProvider] Error loading profile:", error);
+					return false;
+				}
+
+				if (data) {
+					setProfile(data);
+					return true;
+				}
+				return false;
+			} catch (error) {
+				console.error("[AuthProvider] Exception loading profile:", error);
 				return false;
 			}
-
-			if (data) {
-				setProfile(data[0]);
-				return true;
-			}
-			return false;
 		};
 
 		// Obtener sesión inicial
 		const getSession = async () => {
+			setLoading(true);
 			try {
 				const {
 					data: { session }
 				} = await supabase.auth.getSession();
+
 				setUser(session?.user ?? null);
 
 				if (session?.user) {
 					await loadProfile(session.user.id);
 				}
-				setLoading(false);
 			} catch (error) {
-				console.error("Error getting session:", error);
+				console.error("[AuthProvider] Error getting session:", error);
 			} finally {
 				setLoading(false);
 			}
@@ -79,7 +89,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			}
 		});
 
-		return () => subscription.unsubscribe();
+		// Handle app visibility changes (important for mobile)
+		const handleVisibilityChange = async () => {
+			if (document.visibilityState === "visible") {
+				// App returned to foreground - refresh session and profile
+				const {
+					data: { session }
+				} = await supabase.auth.getSession();
+				if (session?.user) {
+					// Reload profile to ensure it's current
+					await loadProfile(session.user.id);
+				}
+			}
+		};
+
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+
+		return () => {
+			subscription.unsubscribe();
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
