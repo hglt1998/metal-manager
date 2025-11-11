@@ -7,7 +7,6 @@ export type Json =
 	| Json[];
 
 export type UserRole = "admin" | "operario" | "planificador_rutas";
-export type UnidadMedida = "Kilogramos" | "Toneladas";
 
 export interface Database {
 	public: {
@@ -61,78 +60,6 @@ export interface Database {
 					updated_at?: string;
 				};
 			};
-			ubicaciones_recogida: {
-				Row: {
-					id: string;
-					nombre: string;
-					created_at: string;
-				};
-				Insert: {
-					id?: string;
-					nombre: string;
-					created_at?: string;
-				};
-				Update: {
-					id?: string;
-					nombre?: string;
-					created_at?: string;
-				};
-			};
-			ubicaciones_destino: {
-				Row: {
-					id: string;
-					nombre: string;
-					created_at: string;
-				};
-				Insert: {
-					id?: string;
-					nombre: string;
-					created_at?: string;
-				};
-				Update: {
-					id?: string;
-					nombre?: string;
-					created_at?: string;
-				};
-			};
-			cargas: {
-				Row: {
-					id: string;
-					material_id: string;
-					centro_recogida_id: string;
-					centro_destino_id: string;
-					peso: number;
-					unidad_medida: UnidadMedida;
-					total: number;
-					operario_id: string;
-					foto_albaran: string | null;
-					created_at: string;
-				};
-				Insert: {
-					id?: string;
-					material_id: string;
-					centro_recogida_id: string;
-					centro_destino_id: string;
-					peso: number;
-					unidad_medida: UnidadMedida;
-					total: number;
-					operario_id: string;
-					foto_albaran?: string | null;
-					created_at?: string;
-				};
-				Update: {
-					id?: string;
-					material_id?: string;
-					centro_recogida_id?: string;
-					centro_destino_id?: string;
-					peso?: number;
-					unidad_medida?: UnidadMedida;
-					total?: number;
-					operario_id?: string;
-					foto_albaran?: string | null;
-					created_at?: string;
-				};
-			};
 		};
 		Views: {
 			[_ in never]: never;
@@ -142,7 +69,6 @@ export interface Database {
 		};
 		Enums: {
 			user_role: UserRole;
-			unidad_medida: UnidadMedida;
 		};
 	};
 }

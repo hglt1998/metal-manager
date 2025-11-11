@@ -2,7 +2,6 @@
 
 import { useAuth } from "@/components/AuthProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CargaFormDialog } from "@/components/CargaFormDialog";
 import { Package, Archive, Activity } from "lucide-react";
 
 export default function DashboardPage() {
@@ -39,9 +38,6 @@ export default function DashboardPage() {
 					<h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Dashboard</h1>
 					<p className="mt-2 text-base sm:text-lg text-muted-foreground">Bienvenido de nuevo, {profile?.full_name || profile?.email}</p>
 				</div>
-				{profile && (
-					<CargaFormDialog userRole={profile.role} userId={profile.id} />
-				)}
 			</div>
 
 			<div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
