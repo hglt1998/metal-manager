@@ -75,3 +75,9 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
 }
+
+
+.pac-item {
+  position: relative;
+  z-index: 999999 !important;
+}
