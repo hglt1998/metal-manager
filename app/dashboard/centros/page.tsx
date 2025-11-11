@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { CentrosTable } from "@/components/centros/CentrosTable";
 import { CentroFormDialog } from "@/components/centros/CentroFormDialog";
@@ -8,17 +8,15 @@ import { Building2 } from "lucide-react";
 
 export default function CentrosPage() {
 	const { profile } = useAuth();
-	const tableRefreshRef = useRef<(() => void) | null>(null);
+	const [refreshKey, setRefreshKey] = useState(0);
 
 	// Solo admins y planificadores pueden acceder
 	if (!profile || !['admin', 'planificador_rutas'].includes(profile.role)) {
 		return <p className="text-muted-foreground">No tienes permisos para acceder a esta página.</p>;
 	}
 
-	const handleCentroCreated = () => {
-		if (tableRefreshRef.current) {
-			tableRefreshRef.current();
-		}
+	const handleRefresh = () => {
+		setRefreshKey((prev) => prev + 1);
 	};
 
 	return (
@@ -33,10 +31,10 @@ export default function CentrosPage() {
 						Gestiona los centros de reciclaje y recogida
 					</p>
 				</div>
-				<CentroFormDialog onSuccess={handleCentroCreated} />
+				<CentroFormDialog onSuccess={handleRefresh} />
 			</div>
 
-			<CentrosTable onRefreshReady={(refreshFn) => { tableRefreshRef.current = refreshFn; }} />
+			<CentrosTable key={refreshKey} />
 		</>
 	);
 }
