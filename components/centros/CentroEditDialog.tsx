@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState, useEffect } from "react";
 import type { TipoCentro } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +20,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pencil, Loader2 } from "lucide-react";
 import { LocationPicker } from "./LocationPicker";
+import { useCentroForm } from "./hooks/useCentroForm";
+import { useTabNavigation } from "./hooks/useTabNavigation";
 
 type Centro = {
 	id: string;
@@ -44,14 +45,13 @@ type Centro = {
 
 type CentroEditDialogProps = {
 	centro: Centro;
-	onSuccess: () => void;
+	onSuccess?: () => void;
 };
 
 export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 	const [open, setOpen] = useState(false);
-	const [loading, setLoading] = useState(false);
-	const [activeTab, setActiveTab] = useState("general");
-	const [formData, setFormData] = useState({
+
+	const initialData = {
 		nombre: centro.nombre,
 		tipo: centro.tipo,
 		direccion: centro.direccion,
@@ -68,51 +68,34 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 		contacto_email: centro.contacto_email || "",
 		activo: centro.activo ?? true,
 		notas: centro.notas || "",
+	};
+
+	const { formData, loading, updateField, updateLocation, resetForm, updateCentro } = useCentroForm({
+		initialData,
+		onSuccess
 	});
-	const supabase = createClient();
+	const { activeTab, goToNext, goToPrevious, goToTab, reset: resetTab } = useTabNavigation();
+
+	// Reset form data when centro changes or dialog opens
+	useEffect(() => {
+		if (open) {
+			resetForm();
+		}
+	}, [open, resetForm]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setLoading(true);
-
-		const { error } = await supabase
-			.from("centros")
-			.update({
-				nombre: formData.nombre,
-				tipo: formData.tipo,
-				direccion: formData.direccion,
-				latitud: formData.latitud ? parseFloat(formData.latitud) : null,
-				longitud: formData.longitud ? parseFloat(formData.longitud) : null,
-				restriccion_altura_m: formData.restriccion_altura_m ? parseFloat(formData.restriccion_altura_m) : null,
-				restriccion_anchura_m: formData.restriccion_anchura_m ? parseFloat(formData.restriccion_anchura_m) : null,
-				restriccion_peso_kg: formData.restriccion_peso_kg ? parseFloat(formData.restriccion_peso_kg) : null,
-				horario_apertura: formData.horario_apertura || null,
-				horario_cierre: formData.horario_cierre || null,
-				dias_operacion: formData.dias_operacion || null,
-				contacto_nombre: formData.contacto_nombre || null,
-				contacto_telefono: formData.contacto_telefono || null,
-				contacto_email: formData.contacto_email || null,
-				activo: formData.activo,
-				notas: formData.notas || null,
-			})
-			.eq("id", centro.id);
-
-		if (error) {
-			console.error("Error al actualizar centro:", error);
-			alert("Error al actualizar el centro");
-		} else {
-			setActiveTab("general");
+		const success = await updateCentro(centro.id);
+		if (success) {
 			setOpen(false);
-			onSuccess();
+			resetTab();
 		}
-
-		setLoading(false);
 	};
 
 	const handleOpenChange = (isOpen: boolean) => {
 		setOpen(isOpen);
 		if (!isOpen) {
-			setActiveTab("general");
+			resetTab();
 		}
 	};
 
@@ -130,7 +113,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 						<DialogDescription>Modifica la información del centro de reciclaje.</DialogDescription>
 					</DialogHeader>
 
-					<Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+					<Tabs value={activeTab} onValueChange={goToTab} className="mt-4">
 						<TabsList className="grid w-full grid-cols-4">
 							<TabsTrigger value="general">General</TabsTrigger>
 							<TabsTrigger value="ubicacion">Ubicación</TabsTrigger>
@@ -147,7 +130,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 									id="edit-nombre"
 									placeholder="Ej: Centro de Reciclaje Norte"
 									value={formData.nombre}
-									onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+									onChange={(e) => updateField("nombre", e.target.value)}
 									required
 									disabled={loading}
 								/>
@@ -156,7 +139,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 								<Label htmlFor="edit-tipo">
 									Tipo <span className="text-destructive">*</span>
 								</Label>
-								<Select value={formData.tipo} onValueChange={(value: TipoCentro) => setFormData({ ...formData, tipo: value })} disabled={loading}>
+								<Select value={formData.tipo} onValueChange={(value: TipoCentro) => updateField("tipo", value)} disabled={loading}>
 									<SelectTrigger id="edit-tipo">
 										<SelectValue />
 									</SelectTrigger>
@@ -173,7 +156,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 									id="edit-contacto_nombre"
 									placeholder="Nombre del contacto"
 									value={formData.contacto_nombre}
-									onChange={(e) => setFormData({ ...formData, contacto_nombre: e.target.value })}
+									onChange={(e) => updateField("contacto_nombre", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -184,7 +167,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 									type="tel"
 									placeholder="+34 123 456 789"
 									value={formData.contacto_telefono}
-									onChange={(e) => setFormData({ ...formData, contacto_telefono: e.target.value })}
+									onChange={(e) => updateField("contacto_telefono", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -195,7 +178,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 									type="email"
 									placeholder="contacto@centro.com"
 									value={formData.contacto_email}
-									onChange={(e) => setFormData({ ...formData, contacto_email: e.target.value })}
+									onChange={(e) => updateField("contacto_email", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -204,7 +187,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 								<Switch
 									id="edit-activo"
 									checked={formData.activo}
-									onCheckedChange={(checked) => setFormData({ ...formData, activo: checked })}
+									onCheckedChange={(checked) => updateField("activo", checked)}
 									disabled={loading}
 								/>
 							</div>
@@ -214,7 +197,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 									id="edit-notas"
 									placeholder="Información adicional sobre el centro"
 									value={formData.notas}
-									onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+									onChange={(e) => updateField("notas", e.target.value)}
 									disabled={loading}
 									rows={3}
 								/>
@@ -226,7 +209,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 								direccion={formData.direccion}
 								latitud={formData.latitud}
 								longitud={formData.longitud}
-								onLocationChange={(data) => setFormData({ ...formData, ...data })}
+								onLocationChange={updateLocation}
 								disabled={loading}
 							/>
 						</TabsContent>
@@ -241,7 +224,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 									min="0"
 									placeholder="Ej: 3.5"
 									value={formData.restriccion_altura_m}
-									onChange={(e) => setFormData({ ...formData, restriccion_altura_m: e.target.value })}
+									onChange={(e) => updateField("restriccion_altura_m", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -254,7 +237,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 									min="0"
 									placeholder="Ej: 2.5"
 									value={formData.restriccion_anchura_m}
-									onChange={(e) => setFormData({ ...formData, restriccion_anchura_m: e.target.value })}
+									onChange={(e) => updateField("restriccion_anchura_m", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -267,7 +250,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 									min="0"
 									placeholder="Ej: 3500"
 									value={formData.restriccion_peso_kg}
-									onChange={(e) => setFormData({ ...formData, restriccion_peso_kg: e.target.value })}
+									onChange={(e) => updateField("restriccion_peso_kg", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -281,7 +264,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 										id="edit-horario_apertura"
 										type="time"
 										value={formData.horario_apertura}
-										onChange={(e) => setFormData({ ...formData, horario_apertura: e.target.value })}
+										onChange={(e) => updateField("horario_apertura", e.target.value)}
 										disabled={loading}
 									/>
 								</div>
@@ -291,7 +274,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 										id="edit-horario_cierre"
 										type="time"
 										value={formData.horario_cierre}
-										onChange={(e) => setFormData({ ...formData, horario_cierre: e.target.value })}
+										onChange={(e) => updateField("horario_cierre", e.target.value)}
 										disabled={loading}
 									/>
 								</div>
@@ -302,7 +285,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 									id="edit-dias_operacion"
 									placeholder="Ej: Lunes a Viernes, L-V, 24/7"
 									value={formData.dias_operacion}
-									onChange={(e) => setFormData({ ...formData, dias_operacion: e.target.value })}
+									onChange={(e) => updateField("dias_operacion", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -315,17 +298,17 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 						</Button>
 
 						{activeTab === "general" && (
-							<Button type="button" onClick={() => setActiveTab("ubicacion")} disabled={loading}>
+							<Button type="button" onClick={goToNext} disabled={loading}>
 								Siguiente
 							</Button>
 						)}
 
 						{activeTab === "ubicacion" && (
 							<>
-								<Button type="button" variant="outline" onClick={() => setActiveTab("general")} disabled={loading}>
+								<Button type="button" variant="outline" onClick={goToPrevious} disabled={loading}>
 									Anterior
 								</Button>
-								<Button type="button" onClick={() => setActiveTab("restricciones")} disabled={loading}>
+								<Button type="button" onClick={goToNext} disabled={loading}>
 									Siguiente
 								</Button>
 							</>
@@ -333,10 +316,10 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 
 						{activeTab === "restricciones" && (
 							<>
-								<Button type="button" variant="outline" onClick={() => setActiveTab("ubicacion")} disabled={loading}>
+								<Button type="button" variant="outline" onClick={goToPrevious} disabled={loading}>
 									Anterior
 								</Button>
-								<Button type="button" onClick={() => setActiveTab("horarios")} disabled={loading}>
+								<Button type="button" onClick={goToNext} disabled={loading}>
 									Siguiente
 								</Button>
 							</>
@@ -344,7 +327,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 
 						{activeTab === "horarios" && (
 							<>
-								<Button type="button" variant="outline" onClick={() => setActiveTab("restricciones")} disabled={loading}>
+								<Button type="button" variant="outline" onClick={goToPrevious} disabled={loading}>
 									Anterior
 								</Button>
 								<Button type="submit" disabled={loading}>
