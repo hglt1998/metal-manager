@@ -45,17 +45,18 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
+		console.log(formData);
 
 		const { error } = await supabase.from("centros").insert([
 			{
 				nombre: formData.nombre,
 				tipo: formData.tipo,
 				direccion: formData.direccion,
-				latitud: formData.latitud ? parseFloat(formData.latitud) : null,
-				longitud: formData.longitud ? parseFloat(formData.longitud) : null,
-				restriccion_altura_m: formData.restriccion_altura_m ? parseFloat(formData.restriccion_altura_m) : null,
-				restriccion_anchura_m: formData.restriccion_anchura_m ? parseFloat(formData.restriccion_anchura_m) : null,
-				restriccion_peso_kg: formData.restriccion_peso_kg ? parseFloat(formData.restriccion_peso_kg) : null,
+				latitud: formData.latitud ? Number(formData.latitud) : null,
+				longitud: formData.longitud ? Number(formData.longitud) : null,
+				restriccion_altura_m: formData.restriccion_altura_m ? Number(formData.restriccion_altura_m) : null,
+				restriccion_anchura_m: formData.restriccion_anchura_m ? Number(formData.restriccion_anchura_m) : null,
+				restriccion_peso_kg: formData.restriccion_peso_kg ? Number(formData.restriccion_peso_kg) : null,
 				horario_apertura: formData.horario_apertura || null,
 				horario_cierre: formData.horario_cierre || null,
 				dias_operacion: formData.dias_operacion || null,
@@ -192,12 +193,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 							</div>
 							<div className="flex items-center justify-between">
 								<Label htmlFor="activo">Centro activo</Label>
-								<Switch
-									id="activo"
-									checked={formData.activo}
-									onCheckedChange={(checked) => setFormData({ ...formData, activo: checked })}
-									disabled={loading}
-								/>
+								<Switch id="activo" checked={formData.activo} onCheckedChange={(checked) => setFormData({ ...formData, activo: checked })} disabled={loading} />
 							</div>
 							<div className="grid gap-2">
 								<Label htmlFor="notas">Notas</Label>
@@ -217,7 +213,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 								direccion={formData.direccion}
 								latitud={formData.latitud}
 								longitud={formData.longitud}
-								onLocationChange={(data) => setFormData({ ...formData, ...data })}
+								onLocationChange={(data) => setFormData((prev) => ({ ...prev, ...data }))}
 								disabled={loading}
 							/>
 						</TabsContent>
@@ -268,23 +264,11 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 							<div className="grid grid-cols-2 gap-4">
 								<div className="grid gap-2">
 									<Label htmlFor="horario_apertura">Hora de apertura</Label>
-									<Input
-										id="horario_apertura"
-										type="time"
-										value={formData.horario_apertura}
-										onChange={(e) => setFormData({ ...formData, horario_apertura: e.target.value })}
-										disabled={loading}
-									/>
+									<Input id="horario_apertura" type="time" value={formData.horario_apertura} onChange={(e) => setFormData({ ...formData, horario_apertura: e.target.value })} disabled={loading} />
 								</div>
 								<div className="grid gap-2">
 									<Label htmlFor="horario_cierre">Hora de cierre</Label>
-									<Input
-										id="horario_cierre"
-										type="time"
-										value={formData.horario_cierre}
-										onChange={(e) => setFormData({ ...formData, horario_cierre: e.target.value })}
-										disabled={loading}
-									/>
+									<Input id="horario_cierre" type="time" value={formData.horario_cierre} onChange={(e) => setFormData({ ...formData, horario_cierre: e.target.value })} disabled={loading} />
 								</div>
 							</div>
 							<div className="grid gap-2">

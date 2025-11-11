@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,24 +42,33 @@ export function CentrosTable({ onRefreshReady }: CentrosTableProps) {
 	const [deleting, setDeleting] = useState(false);
 	const supabase = createClient();
 
-	const fetchCentros = async () => {
-		setLoading(true);
-		const { data, error } = await supabase.from("centros").select("*").order("nombre", { ascending: true });
+	const fetchCentros = useCallback(
+		async (showLoader = true) => {
+			if (showLoader) {
+				setLoading(true);
+			}
 
-		if (error) {
-			console.error("Error al cargar centros:", error);
-		} else {
-			setCentros(data || []);
-		}
-		setLoading(false);
-	};
+			const { data, error } = await supabase.from("centros").select("*").order("nombre", { ascending: true });
+
+			if (error) {
+				console.error("Error al cargar centros:", error);
+			} else {
+				setCentros(data || []);
+			}
+
+			setLoading(false);
+		},
+		[supabase]
+	);
 
 	useEffect(() => {
-		fetchCentros();
+		// primera carga: no pongas el setLoading(true) porque ya está en true
+		fetchCentros(false);
+
 		if (onRefreshReady) {
 			onRefreshReady(fetchCentros);
 		}
-	}, []);
+	}, [onRefreshReady, fetchCentros]);
 
 	const handleDelete = async () => {
 		if (!deleteId) return;
