@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useLoadScript, GoogleMap, Marker } from "@react-google-maps/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, MapPin, Search } from "lucide-react";
 
 const libraries: ("places" | "geometry")[] = ["places"];
+const COUNTRIES = ["es"]; // Restricción por defecto a España
 
 const mapContainerStyle = {
 	width: "100%",
@@ -15,7 +16,7 @@ const mapContainerStyle = {
 };
 
 const defaultCenter = {
-	lat: 40.4168,
+	lat: 40.4168, // Madrid
 	lng: -3.7038
 };
 
@@ -25,21 +26,9 @@ type LocationPickerProps = {
 	longitud: string;
 	onLocationChange: (data: { direccion: string; latitud: string; longitud: string }) => void;
 	disabled?: boolean;
-	/**
-	 * Lista de países permitidos para el autocomplete.
-	 * Código ISO 3166-1 Alpha-2 (es, pt, fr, etc.)
-	 */
-	countries?: string[];
 };
 
-export function LocationPicker({
-	direccion,
-	latitud,
-	longitud,
-	onLocationChange,
-	disabled,
-	countries = ["es"] // por defecto España
-}: LocationPickerProps) {
+export function LocationPicker({ direccion, latitud, longitud, onLocationChange, disabled }: LocationPickerProps) {
 	const [showMap, setShowMap] = useState(false);
 	const [searchInput, setSearchInput] = useState("");
 	const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
@@ -48,15 +37,15 @@ export function LocationPicker({
 	const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
 	const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
 	const mapRef = useRef<google.maps.Map | null>(null);
-	const dummyDivRef = useRef<HTMLDivElement | null>(null); // por si no hay mapa
+	const geocoderRef = useRef<google.maps.Geocoder | null>(null);
 
 	const { isLoaded, loadError } = useLoadScript({
 		googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
 		libraries
 	});
 
-	// posición inicial
-	const getInitialPosition = () => {
+	// Calcular posición del marcador directamente de los props
+	const markerPosition = useCallback(() => {
 		if (latitud && longitud) {
 			const lat = parseFloat(latitud);
 			const lng = parseFloat(longitud);
@@ -65,12 +54,11 @@ export function LocationPicker({
 			}
 		}
 		return null;
-	};
+	}, [latitud, longitud])();
 
-	const markerPosition = getInitialPosition();
 	const mapCenter = markerPosition || defaultCenter;
 
-	// cuando se carga Google, creamos los servicios
+	// Inicializar servicios de Google Maps
 	useEffect(() => {
 		if (!isLoaded || typeof window === "undefined" || !window.google) return;
 
@@ -78,31 +66,32 @@ export function LocationPicker({
 			autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
 		}
 
-		// PlacesService necesita un elemento DOM o un mapa
-		if (!placesServiceRef.current) {
-			if (mapRef.current) {
-				placesServiceRef.current = new window.google.maps.places.PlacesService(mapRef.current);
-			} else if (dummyDivRef.current) {
-				placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDivRef.current);
-			}
+		if (!geocoderRef.current) {
+			geocoderRef.current = new window.google.maps.Geocoder();
+		}
+
+		// PlacesService necesita un elemento DOM, lo creamos cuando se carga el mapa
+		if (mapRef.current && !placesServiceRef.current) {
+			placesServiceRef.current = new window.google.maps.places.PlacesService(mapRef.current);
 		}
 	}, [isLoaded]);
 
-	// buscar sugerencias cuando el usuario escribe
-	const fetchSuggestions = useCallback(
-		(input: string) => {
-			if (!autocompleteServiceRef.current || !input.trim()) {
-				setSuggestions([]);
-				return;
-			}
+	// Buscar sugerencias con debounce
+	useEffect(() => {
+		if (disabled || !searchInput.trim()) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
+			setSuggestions([]);
+			return;
+		}
+
+		const timeoutId = setTimeout(() => {
+			if (!autocompleteServiceRef.current) return;
 
 			setIsSearching(true);
-
 			autocompleteServiceRef.current.getPlacePredictions(
 				{
-					input,
-					// aquí filtramos por país
-					componentRestrictions: countries.length ? { country: countries } : undefined
+					input: searchInput,
+					componentRestrictions: { country: COUNTRIES }
 				},
 				(predictions, status) => {
 					setIsSearching(false);
@@ -113,81 +102,69 @@ export function LocationPicker({
 					}
 				}
 			);
-		},
-		[countries]
-	);
-
-	// debounce sencillo
-	useEffect(() => {
-		const id = setTimeout(() => {
-			if (searchInput && !disabled) {
-				fetchSuggestions(searchInput);
-			} else {
-				setSuggestions([]);
-			}
 		}, 300);
 
-		return () => clearTimeout(id);
-	}, [searchInput, fetchSuggestions, disabled]);
+		return () => clearTimeout(timeoutId);
+	}, [searchInput, disabled]);
 
-	// cuando el usuario elige una sugerencia
-	const handleSelectSuggestion = (prediction: google.maps.places.AutocompletePrediction) => {
-		if (!placesServiceRef.current) return;
-
-		// pedimos los detalles reales del sitio
-		placesServiceRef.current.getDetails(
-			{
-				placeId: prediction.place_id,
-				fields: ["formatted_address", "geometry"]
-			},
-			(place, status) => {
-				if (status === window.google.maps.places.PlacesServiceStatus.OK && place && place.geometry?.location) {
-					const lat = place.geometry.location.lat();
-					const lng = place.geometry.location.lng();
-					const address = place.formatted_address || prediction.description;
-
-					onLocationChange({
-						direccion: address,
-						latitud: lat.toString(),
-						longitud: lng.toString()
-					});
-
-					// limpiamos
-					setSearchInput("");
-					setSuggestions([]);
-				}
+	// Seleccionar una sugerencia del autocomplete
+	const handleSelectSuggestion = useCallback(
+		(prediction: google.maps.places.AutocompletePrediction) => {
+			// Crear PlacesService si no existe (puede pasar si el mapa no se ha mostrado)
+			if (!placesServiceRef.current) {
+				const dummyDiv = document.createElement("div");
+				placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
 			}
-		);
-	};
 
-	// click en el mapa
-	const onMapClick = useCallback(
-		(e: google.maps.MapMouseEvent) => {
-			if (e.latLng) {
-				const lat = e.latLng.lat();
-				const lng = e.latLng.lng();
+			placesServiceRef.current.getDetails(
+				{
+					placeId: prediction.place_id,
+					fields: ["formatted_address", "geometry"]
+				},
+				(place, status) => {
+					if (status === window.google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
+						const lat = place.geometry.location.lat();
+						const lng = place.geometry.location.lng();
+						const address = place.formatted_address || prediction.description;
 
-				const geocoder = new window.google.maps.Geocoder();
-				geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-					if (status === "OK" && results && results[0]) {
 						onLocationChange({
-							direccion: results[0].formatted_address,
+							direccion: address,
 							latitud: lat.toString(),
 							longitud: lng.toString()
 						});
-					} else {
-						onLocationChange({
-							direccion: direccion || `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-							latitud: lat.toString(),
-							longitud: lng.toString()
-						});
+
+						setSearchInput("");
+						setSuggestions([]);
 					}
-				});
-			}
+				}
+			);
 		},
-		[direccion, onLocationChange]
+		[onLocationChange]
 	);
 
+	// Click en el mapa para seleccionar ubicación
+	const handleMapClick = useCallback(
+		(e: google.maps.MapMouseEvent) => {
+			if (!e.latLng || !geocoderRef.current) return;
+
+			const lat = e.latLng.lat();
+			const lng = e.latLng.lng();
+
+			// Geocodificación inversa para obtener la dirección
+			geocoderRef.current.geocode({ location: { lat, lng } }, (results, status) => {
+				const address = status === "OK" && results?.[0] ? results[0].formatted_address : `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+				onLocationChange({
+					direccion: address,
+					latitud: lat.toString(),
+					longitud: lng.toString()
+				});
+			});
+		},
+		[onLocationChange]
+	);
+
+	// Manejadores de renderizado
 	if (loadError) {
 		return <div className="text-destructive text-sm">Error al cargar Google Maps</div>;
 	}
@@ -201,52 +178,51 @@ export function LocationPicker({
 	}
 
 	return (
-		<div className="space-y-4 relative">
-			{/* buscador */}
+		<div className="space-y-4">
+			{/* Buscador de ubicaciones */}
 			<div className="grid gap-2">
 				<Label htmlFor="location-search">
 					<Search className="inline h-4 w-4 mr-1" />
 					Buscar ubicación
 				</Label>
 				<div className="relative">
-					<Input id="location-search" placeholder="Busca un lugar (se filtra por país)" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} disabled={disabled} autoComplete="off" />
+					<Input id="location-search" placeholder="Busca un lugar en España" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} disabled={disabled} autoComplete="off" />
 
-					{/* lista de sugerencias dentro del dialog */}
-					{searchInput.length > 0 && suggestions.length > 0 && (
-						<ul className="absolute z-50 mt-1 w-full rounded-md border bg-background shadow-sm max-h-56 overflow-y-auto">
-							{suggestions.map((sug) => (
-								<li key={sug.place_id} className="flex gap-2 items-start px-3 py-2 cursor-pointer hover:bg-muted" onClick={() => handleSelectSuggestion(sug)}>
-									<MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-									<div className="flex-1">
-										<p className="text-sm">{sug.structured_formatting.main_text}</p>
-										{sug.structured_formatting.secondary_text && <p className="text-xs text-muted-foreground">{sug.structured_formatting.secondary_text}</p>}
-									</div>
-								</li>
-							))}
-						</ul>
-					)}
-
-					{/* estado de búsqueda */}
+					{/* Indicador de búsqueda */}
 					{isSearching && (
 						<div className="absolute right-2 top-2">
 							<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
 						</div>
 					)}
+
+					{/* Lista de sugerencias */}
+					{suggestions.length > 0 && (
+						<ul className="absolute z-50 mt-1 w-full rounded-md border bg-background shadow-lg max-h-60 overflow-y-auto">
+							{suggestions.map((suggestion) => (
+								<li key={suggestion.place_id} className="flex gap-2 items-start px-3 py-2 cursor-pointer hover:bg-muted transition-colors" onClick={() => handleSelectSuggestion(suggestion)}>
+									<MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+									<div className="flex-1 min-w-0">
+										<p className="text-sm font-medium truncate">{suggestion.structured_formatting.main_text}</p>
+										{suggestion.structured_formatting.secondary_text && <p className="text-xs text-muted-foreground truncate">{suggestion.structured_formatting.secondary_text}</p>}
+									</div>
+								</li>
+							))}
+						</ul>
+					)}
 				</div>
-				<p className="text-xs text-muted-foreground">Se está limitando la búsqueda a: {countries.join(", ").toUpperCase()}</p>
 			</div>
 
-			{/* dirección actual */}
+			{/* Ubicación seleccionada */}
 			{direccion && (
 				<div className="rounded-md bg-muted p-3">
 					<div className="flex items-start gap-2">
 						<MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-						<div className="flex-1">
+						<div className="flex-1 min-w-0">
 							<p className="text-sm font-medium">Ubicación seleccionada:</p>
-							<p className="text-sm text-muted-foreground">{direccion}</p>
-							{latitud && longitud && (
+							<p className="text-sm text-muted-foreground wrap-break-word">{direccion}</p>
+							{markerPosition && (
 								<p className="text-xs text-muted-foreground mt-1">
-									Coordenadas: {parseFloat(latitud).toFixed(6)}, {parseFloat(longitud).toFixed(6)}
+									Coordenadas: {markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}
 								</p>
 							)}
 						</div>
@@ -254,27 +230,27 @@ export function LocationPicker({
 				</div>
 			)}
 
-			{/* botón mapa */}
+			{/* Botón para mostrar/ocultar mapa */}
 			<Button type="button" variant="outline" onClick={() => setShowMap((prev) => !prev)} disabled={disabled} className="w-full">
 				{showMap ? "Ocultar mapa" : "¿No encuentras la ubicación? Usa el mapa interactivo"}
 			</Button>
 
-			{/* mapa */}
+			{/* Mapa interactivo */}
 			{showMap && (
 				<div className="space-y-2">
 					<Label>
 						<MapPin className="inline h-4 w-4 mr-1" />
-						Mapa interactivo
+						Haz clic en el mapa para seleccionar una ubicación
 					</Label>
 					<div className="rounded-md overflow-hidden border">
 						<GoogleMap
 							mapContainerStyle={mapContainerStyle}
 							center={mapCenter}
-							zoom={15}
-							onClick={onMapClick}
+							zoom={markerPosition ? 15 : 6}
+							onClick={handleMapClick}
 							onLoad={(map) => {
 								mapRef.current = map;
-								// si aún no habíamos creado el places service, lo creamos aquí
+								// Inicializar PlacesService cuando se carga el mapa
 								if (!placesServiceRef.current) {
 									placesServiceRef.current = new window.google.maps.places.PlacesService(map);
 								}
@@ -282,18 +258,15 @@ export function LocationPicker({
 							options={{
 								streetViewControl: false,
 								mapTypeControl: false,
-								fullscreenControl: false
+								fullscreenControl: false,
+								zoomControl: true
 							}}
 						>
 							{markerPosition && <Marker position={markerPosition} />}
 						</GoogleMap>
 					</div>
-					<p className="text-xs text-muted-foreground">Haz clic en el mapa para seleccionar una ubicación precisa</p>
 				</div>
 			)}
-
-			{/* dummy div para PlacesService si no hay mapa */}
-			{!showMap && <div ref={dummyDivRef} className="hidden" />}
 		</div>
 	);
 }

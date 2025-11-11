@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import type { TipoCentro } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -13,6 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Loader2 } from "lucide-react";
 import { LocationPicker } from "./LocationPicker";
+import { useCentroForm } from "./hooks/useCentroForm";
+import { useTabNavigation } from "./hooks/useTabNavigation";
 
 interface CentroFormDialogProps {
 	onSuccess?: () => void;
@@ -20,90 +21,23 @@ interface CentroFormDialogProps {
 
 export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 	const [open, setOpen] = useState(false);
-	const [loading, setLoading] = useState(false);
-	const [activeTab, setActiveTab] = useState("general");
-	const [formData, setFormData] = useState({
-		nombre: "",
-		tipo: "remitente" as TipoCentro,
-		direccion: "",
-		latitud: "",
-		longitud: "",
-		restriccion_altura_m: "",
-		restriccion_anchura_m: "",
-		restriccion_peso_kg: "",
-		horario_apertura: "",
-		horario_cierre: "",
-		dias_operacion: "",
-		contacto_nombre: "",
-		contacto_telefono: "",
-		contacto_email: "",
-		activo: true,
-		notas: ""
-	});
-	const supabase = createClient();
+	const { formData, loading, updateField, updateLocation, resetForm, createCentro } = useCentroForm({ onSuccess });
+	const { activeTab, goToNext, goToPrevious, goToTab, reset: resetTab } = useTabNavigation();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setLoading(true);
-		console.log(formData);
-
-		const { error } = await supabase.from("centros").insert([
-			{
-				nombre: formData.nombre,
-				tipo: formData.tipo,
-				direccion: formData.direccion,
-				latitud: formData.latitud ? Number(formData.latitud) : null,
-				longitud: formData.longitud ? Number(formData.longitud) : null,
-				restriccion_altura_m: formData.restriccion_altura_m ? Number(formData.restriccion_altura_m) : null,
-				restriccion_anchura_m: formData.restriccion_anchura_m ? Number(formData.restriccion_anchura_m) : null,
-				restriccion_peso_kg: formData.restriccion_peso_kg ? Number(formData.restriccion_peso_kg) : null,
-				horario_apertura: formData.horario_apertura || null,
-				horario_cierre: formData.horario_cierre || null,
-				dias_operacion: formData.dias_operacion || null,
-				contacto_nombre: formData.contacto_nombre || null,
-				contacto_telefono: formData.contacto_telefono || null,
-				contacto_email: formData.contacto_email || null,
-				activo: formData.activo,
-				notas: formData.notas || null
-			}
-		]);
-
-		if (error) {
-			console.error("Error al crear centro:", error);
-			alert("Error al crear el centro");
-		} else {
-			setFormData({
-				nombre: "",
-				tipo: "remitente",
-				direccion: "",
-				latitud: "",
-				longitud: "",
-				restriccion_altura_m: "",
-				restriccion_anchura_m: "",
-				restriccion_peso_kg: "",
-				horario_apertura: "",
-				horario_cierre: "",
-				dias_operacion: "",
-				contacto_nombre: "",
-				contacto_telefono: "",
-				contacto_email: "",
-				activo: true,
-				notas: ""
-			});
-			setActiveTab("general");
+		const success = await createCentro();
+		if (success) {
 			setOpen(false);
-			if (onSuccess) {
-				onSuccess();
-			}
+			resetTab();
 		}
-
-		setLoading(false);
 	};
 
 	const handleOpenChange = (isOpen: boolean) => {
 		setOpen(isOpen);
 		if (!isOpen) {
-			setActiveTab("general");
+			resetTab();
+			resetForm();
 		}
 	};
 
@@ -122,7 +56,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 						<DialogDescription>Agrega un nuevo centro de reciclaje o recogida.</DialogDescription>
 					</DialogHeader>
 
-					<Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+					<Tabs value={activeTab} onValueChange={goToTab} className="mt-4">
 						<TabsList className="grid w-full grid-cols-4">
 							<TabsTrigger value="general">General</TabsTrigger>
 							<TabsTrigger value="ubicacion">Ubicación</TabsTrigger>
@@ -139,7 +73,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 									id="nombre"
 									placeholder="Ej: Centro de Reciclaje Norte"
 									value={formData.nombre}
-									onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+									onChange={(e) => updateField("nombre", e.target.value)}
 									required
 									disabled={loading}
 								/>
@@ -148,7 +82,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 								<Label htmlFor="tipo">
 									Tipo <span className="text-destructive">*</span>
 								</Label>
-								<Select value={formData.tipo} onValueChange={(value: TipoCentro) => setFormData({ ...formData, tipo: value })} disabled={loading}>
+								<Select value={formData.tipo} onValueChange={(value: TipoCentro) => updateField("tipo", value)} disabled={loading}>
 									<SelectTrigger id="tipo">
 										<SelectValue />
 									</SelectTrigger>
@@ -165,7 +99,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 									id="contacto_nombre"
 									placeholder="Nombre del contacto"
 									value={formData.contacto_nombre}
-									onChange={(e) => setFormData({ ...formData, contacto_nombre: e.target.value })}
+									onChange={(e) => updateField("contacto_nombre", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -176,7 +110,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 									type="tel"
 									placeholder="+34 123 456 789"
 									value={formData.contacto_telefono}
-									onChange={(e) => setFormData({ ...formData, contacto_telefono: e.target.value })}
+									onChange={(e) => updateField("contacto_telefono", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -187,13 +121,13 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 									type="email"
 									placeholder="contacto@centro.com"
 									value={formData.contacto_email}
-									onChange={(e) => setFormData({ ...formData, contacto_email: e.target.value })}
+									onChange={(e) => updateField("contacto_email", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
 							<div className="flex items-center justify-between">
 								<Label htmlFor="activo">Centro activo</Label>
-								<Switch id="activo" checked={formData.activo} onCheckedChange={(checked) => setFormData({ ...formData, activo: checked })} disabled={loading} />
+								<Switch id="activo" checked={formData.activo} onCheckedChange={(checked) => updateField("activo", checked)} disabled={loading} />
 							</div>
 							<div className="grid gap-2">
 								<Label htmlFor="notas">Notas</Label>
@@ -201,7 +135,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 									id="notas"
 									placeholder="Información adicional sobre el centro"
 									value={formData.notas}
-									onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+									onChange={(e) => updateField("notas", e.target.value)}
 									disabled={loading}
 									rows={3}
 								/>
@@ -213,7 +147,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 								direccion={formData.direccion}
 								latitud={formData.latitud}
 								longitud={formData.longitud}
-								onLocationChange={(data) => setFormData((prev) => ({ ...prev, ...data }))}
+								onLocationChange={updateLocation}
 								disabled={loading}
 							/>
 						</TabsContent>
@@ -228,7 +162,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 									min="0"
 									placeholder="Ej: 3.5"
 									value={formData.restriccion_altura_m}
-									onChange={(e) => setFormData({ ...formData, restriccion_altura_m: e.target.value })}
+									onChange={(e) => updateField("restriccion_altura_m", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -241,7 +175,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 									min="0"
 									placeholder="Ej: 2.5"
 									value={formData.restriccion_anchura_m}
-									onChange={(e) => setFormData({ ...formData, restriccion_anchura_m: e.target.value })}
+									onChange={(e) => updateField("restriccion_anchura_m", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -254,7 +188,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 									min="0"
 									placeholder="Ej: 3500"
 									value={formData.restriccion_peso_kg}
-									onChange={(e) => setFormData({ ...formData, restriccion_peso_kg: e.target.value })}
+									onChange={(e) => updateField("restriccion_peso_kg", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -264,11 +198,11 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 							<div className="grid grid-cols-2 gap-4">
 								<div className="grid gap-2">
 									<Label htmlFor="horario_apertura">Hora de apertura</Label>
-									<Input id="horario_apertura" type="time" value={formData.horario_apertura} onChange={(e) => setFormData({ ...formData, horario_apertura: e.target.value })} disabled={loading} />
+									<Input id="horario_apertura" type="time" value={formData.horario_apertura} onChange={(e) => updateField("horario_apertura", e.target.value)} disabled={loading} />
 								</div>
 								<div className="grid gap-2">
 									<Label htmlFor="horario_cierre">Hora de cierre</Label>
-									<Input id="horario_cierre" type="time" value={formData.horario_cierre} onChange={(e) => setFormData({ ...formData, horario_cierre: e.target.value })} disabled={loading} />
+									<Input id="horario_cierre" type="time" value={formData.horario_cierre} onChange={(e) => updateField("horario_cierre", e.target.value)} disabled={loading} />
 								</div>
 							</div>
 							<div className="grid gap-2">
@@ -277,7 +211,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 									id="dias_operacion"
 									placeholder="Ej: Lunes a Viernes, L-V, 24/7"
 									value={formData.dias_operacion}
-									onChange={(e) => setFormData({ ...formData, dias_operacion: e.target.value })}
+									onChange={(e) => updateField("dias_operacion", e.target.value)}
 									disabled={loading}
 								/>
 							</div>
@@ -290,17 +224,17 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 						</Button>
 
 						{activeTab === "general" && (
-							<Button type="button" onClick={() => setActiveTab("ubicacion")} disabled={loading}>
+							<Button type="button" onClick={goToNext} disabled={loading}>
 								Siguiente
 							</Button>
 						)}
 
 						{activeTab === "ubicacion" && (
 							<>
-								<Button type="button" variant="outline" onClick={() => setActiveTab("general")} disabled={loading}>
+								<Button type="button" variant="outline" onClick={goToPrevious} disabled={loading}>
 									Anterior
 								</Button>
-								<Button type="button" onClick={() => setActiveTab("restricciones")} disabled={loading}>
+								<Button type="button" onClick={goToNext} disabled={loading}>
 									Siguiente
 								</Button>
 							</>
@@ -308,10 +242,10 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 
 						{activeTab === "restricciones" && (
 							<>
-								<Button type="button" variant="outline" onClick={() => setActiveTab("ubicacion")} disabled={loading}>
+								<Button type="button" variant="outline" onClick={goToPrevious} disabled={loading}>
 									Anterior
 								</Button>
-								<Button type="button" onClick={() => setActiveTab("horarios")} disabled={loading}>
+								<Button type="button" onClick={goToNext} disabled={loading}>
 									Siguiente
 								</Button>
 							</>
@@ -319,7 +253,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 
 						{activeTab === "horarios" && (
 							<>
-								<Button type="button" variant="outline" onClick={() => setActiveTab("restricciones")} disabled={loading}>
+								<Button type="button" variant="outline" onClick={goToPrevious} disabled={loading}>
 									Anterior
 								</Button>
 								<Button type="submit" disabled={loading}>

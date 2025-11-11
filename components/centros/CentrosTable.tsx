@@ -31,44 +31,31 @@ type Centro = {
 	created_at: string;
 };
 
-interface CentrosTableProps {
-	onRefreshReady?: (refreshFn: () => void) => void;
-}
-
-export function CentrosTable({ onRefreshReady }: CentrosTableProps) {
+export function CentrosTable() {
 	const [centros, setCentros] = useState<Centro[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [deleting, setDeleting] = useState(false);
 	const supabase = createClient();
 
-	const fetchCentros = useCallback(
-		async (showLoader = true) => {
-			if (showLoader) {
-				setLoading(true);
-			}
+	const fetchCentros = useCallback(async () => {
+		setLoading(true);
 
-			const { data, error } = await supabase.from("centros").select("*").order("nombre", { ascending: true });
+		const { data, error } = await supabase.from("centros").select("*").order("nombre", { ascending: true });
 
-			if (error) {
-				console.error("Error al cargar centros:", error);
-			} else {
-				setCentros(data || []);
-			}
+		if (error) {
+			console.error("Error al cargar centros:", error);
+		} else {
+			setCentros(data || []);
+		}
 
-			setLoading(false);
-		},
-		[supabase]
-	);
+		setLoading(false);
+	}, [supabase]);
 
 	useEffect(() => {
-		// primera carga: no pongas el setLoading(true) porque ya está en true
-		fetchCentros(false);
-
-		if (onRefreshReady) {
-			onRefreshReady(fetchCentros);
-		}
-	}, [onRefreshReady, fetchCentros]);
+		// eslint-disable-next-line react-hooks/set-state-in-effect
+		fetchCentros();
+	}, [fetchCentros]);
 
 	const handleDelete = async () => {
 		if (!deleteId) return;
@@ -144,7 +131,7 @@ export function CentrosTable({ onRefreshReady }: CentrosTableProps) {
 										<TableCell>
 											<div className="flex flex-col gap-1">
 												<div className="flex items-start gap-2">
-													<MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+													<MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
 													<span className="text-sm line-clamp-2">{centro.direccion}</span>
 												</div>
 												{(centro.latitud || centro.longitud) && (
@@ -192,7 +179,7 @@ export function CentrosTable({ onRefreshReady }: CentrosTableProps) {
 										</TableCell>
 										<TableCell className="text-right">
 											<div className="flex items-center justify-end gap-2">
-												<CentroEditDialog centro={centro} onSuccess={fetchCentros} />
+												<CentroEditDialog centro={centro} />
 												<Button variant="ghost" size="icon" onClick={() => setDeleteId(centro.id)} className="h-8 w-8 text-destructive hover:text-destructive">
 													<Trash2 className="h-4 w-4" />
 												</Button>
