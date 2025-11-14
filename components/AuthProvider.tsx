@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { UserRole } from "@/types/database";
@@ -30,6 +30,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [profile, setProfile] = useState<Profile | null>(null);
 	const [loading, setLoading] = useState(true);
 	const supabase = createClient();
+	const isRefreshingRef = useRef(false);
+	const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 	useEffect(() => {
 		const loadProfile = async (userId: string) => {
@@ -96,31 +98,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		const {
 			data: { subscription }
 		} = supabase.auth.onAuthStateChange(async (_event, session) => {
+			console.log("[AuthProvider] Auth state change:", _event);
+			setLoading(true);
 			setUser(session?.user ?? null);
 			if (session?.user) {
 				await loadProfile(session.user.id);
 			} else {
 				setProfile(null);
 			}
+			setLoading(false);
 		});
 
 		// Handle app visibility changes (important for mobile)
-		const handleVisibilityChange = async () => {
-			if (document.visibilityState === "visible") {
-				// App returned to foreground - refresh session and profile
-				const {
-					data: { session }
-				} = await supabase.auth.getSession();
-				if (session?.user) {
-					// Reload profile to ensure it's current
-					await loadProfile(session.user.id);
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === "visible" && !isRefreshingRef.current) {
+				// Debounce: esperar 200ms antes de refrescar para evitar múltiples llamadas
+				if (refreshTimeoutRef.current) {
+					clearTimeout(refreshTimeoutRef.current);
 				}
+
+				refreshTimeoutRef.current = setTimeout(async () => {
+					isRefreshingRef.current = true;
+					console.log("[AuthProvider] App became visible, refreshing session...");
+
+					try {
+						// App returned to foreground - refresh session and profile
+						const {
+							data: { session }
+						} = await supabase.auth.getSession();
+
+						setUser(session?.user ?? null);
+
+						if (session?.user) {
+							// Reload profile to ensure it's current
+							await loadProfile(session.user.id);
+						} else {
+							setProfile(null);
+						}
+					} catch (error) {
+						console.error("[AuthProvider] Error refreshing on visibility change:", error);
+					} finally {
+						isRefreshingRef.current = false;
+					}
+				}, 200);
 			}
 		};
 
 		document.addEventListener("visibilitychange", handleVisibilityChange);
 
 		return () => {
+			if (refreshTimeoutRef.current) {
+				clearTimeout(refreshTimeoutRef.current);
+			}
 			subscription.unsubscribe();
 			document.removeEventListener("visibilitychange", handleVisibilityChange);
 		};
