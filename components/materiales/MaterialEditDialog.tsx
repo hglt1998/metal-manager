@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useMateriales } from "@/hooks/useMateriales";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -34,29 +34,26 @@ export function MaterialEditDialog({ material, onSuccess }: MaterialEditDialogPr
 		nombre: material.nombre,
 		precio_kg: material.precio_kg,
 	});
-	const supabase = createClient();
+	const { updateMaterial } = useMateriales({ autoLoad: false });
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
 
-		const { error } = await supabase
-			.from("materiales")
-			.update({
+		try {
+			await updateMaterial(material.id, {
 				nombre: formData.nombre,
 				precio_kg: formData.precio_kg,
-			})
-			.eq("id", material.id);
+			});
 
-		if (error) {
-			console.error("Error al actualizar material:", error);
-			alert("Error al actualizar el material");
-		} else {
 			setOpen(false);
 			onSuccess();
+		} catch (error) {
+			console.error("Error al actualizar material:", error);
+			alert("Error al actualizar el material");
+		} finally {
+			setLoading(false);
 		}
-
-		setLoading(false);
 	};
 
 	return (

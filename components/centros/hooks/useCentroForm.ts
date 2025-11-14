@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useCentros } from "@/hooks/useCentros";
 import type { TipoCentro } from "@/types/database";
 
 type CentroFormData = {
@@ -76,7 +76,7 @@ export function useCentroForm({ initialData, onSuccess }: UseCentroFormOptions =
 	});
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const supabase = createClient();
+	const { createCentro: createCentroService, updateCentro: updateCentroService } = useCentros({ autoLoad: false });
 
 	const updateField = useCallback(<K extends keyof CentroFormData>(field: K, value: CentroFormData[K]) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
@@ -95,42 +95,42 @@ export function useCentroForm({ initialData, onSuccess }: UseCentroFormOptions =
 		setLoading(true);
 		setError(null);
 
-		const dbData = transformFormDataToDb(formData);
-		const { error: dbError } = await supabase.from("centros").insert([dbData]);
+		try {
+			const dbData = transformFormDataToDb(formData);
+			await createCentroService(dbData);
 
-		if (dbError) {
-			console.error("Error al crear centro:", dbError);
+			setLoading(false);
+			resetForm();
+			onSuccess?.();
+			return true;
+		} catch (err) {
+			console.error("Error al crear centro:", err);
 			setError("No se pudo crear el centro. Por favor, intenta de nuevo.");
 			setLoading(false);
 			return false;
 		}
-
-		setLoading(false);
-		resetForm();
-		onSuccess?.();
-		return true;
-	}, [formData, supabase, resetForm, onSuccess]);
+	}, [formData, createCentroService, resetForm, onSuccess]);
 
 	const updateCentro = useCallback(
 		async (centroId: string) => {
 			setLoading(true);
 			setError(null);
 
-			const dbData = transformFormDataToDb(formData);
-			const { error: dbError } = await supabase.from("centros").update(dbData).eq("id", centroId);
+			try {
+				const dbData = transformFormDataToDb(formData);
+				await updateCentroService(centroId, dbData);
 
-			if (dbError) {
-				console.error("Error al actualizar centro:", dbError);
+				setLoading(false);
+				onSuccess?.();
+				return true;
+			} catch (err) {
+				console.error("Error al actualizar centro:", err);
 				setError("No se pudo actualizar el centro. Por favor, intenta de nuevo.");
 				setLoading(false);
 				return false;
 			}
-
-			setLoading(false);
-			onSuccess?.();
-			return true;
 		},
-		[formData, supabase, onSuccess]
+		[formData, updateCentroService, onSuccess]
 	);
 
 	return {

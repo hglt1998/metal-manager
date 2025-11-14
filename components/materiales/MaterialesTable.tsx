@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useMateriales } from "@/hooks/useMateriales";
 import {
 	Table,
 	TableBody,
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Loader2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 import { MaterialEditDialog } from "./MaterialEditDialog";
 import {
 	AlertDialog,
@@ -25,65 +25,36 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type Material = {
-	id: string;
-	nombre: string;
-	precio_kg: number;
-	created_at: string;
-};
-
 interface MaterialesTableProps {
 	onRefreshReady?: (refreshFn: () => void) => void;
 }
 
 export function MaterialesTable({ onRefreshReady }: MaterialesTableProps) {
-	const [materiales, setMateriales] = useState<Material[]>([]);
-	const [loading, setLoading] = useState(true);
+	const { materiales, loading, loadMateriales, deleteMaterial } = useMateriales();
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [deleting, setDeleting] = useState(false);
-	const supabase = createClient();
-
-	const fetchMateriales = async () => {
-		setLoading(true);
-		const { data, error } = await supabase
-			.from("materiales")
-			.select("*")
-			.order("nombre", { ascending: true });
-
-		if (error) {
-			console.error("Error al cargar materiales:", error);
-		} else {
-			setMateriales(data || []);
-		}
-		setLoading(false);
-	};
 
 	useEffect(() => {
-		fetchMateriales();
 		// Exponer la función de refresh al componente padre
 		if (onRefreshReady) {
-			onRefreshReady(fetchMateriales);
+			onRefreshReady(loadMateriales);
 		}
-	}, []);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [onRefreshReady]);
 
 	const handleDelete = async () => {
 		if (!deleteId) return;
 
 		setDeleting(true);
-		const { error } = await supabase
-			.from("materiales")
-			.delete()
-			.eq("id", deleteId);
-
-		if (error) {
+		try {
+			await deleteMaterial(deleteId);
+		} catch (error) {
 			console.error("Error al eliminar material:", error);
 			alert("Error al eliminar el material. Puede que esté siendo usado en alguna ruta.");
-		} else {
-			await fetchMateriales();
+		} finally {
+			setDeleting(false);
+			setDeleteId(null);
 		}
-
-		setDeleting(false);
-		setDeleteId(null);
 	};
 
 	if (loading) {
@@ -135,7 +106,7 @@ export function MaterialesTable({ onRefreshReady }: MaterialesTableProps) {
 										<TableCell>{material.precio_kg.toFixed(2)} €</TableCell>
 										<TableCell className="text-right">
 											<div className="flex items-center justify-end gap-2">
-												<MaterialEditDialog material={material} onSuccess={fetchMateriales} />
+												<MaterialEditDialog material={material} onSuccess={loadMateriales} />
 												<Button
 													variant="ghost"
 													size="icon"
