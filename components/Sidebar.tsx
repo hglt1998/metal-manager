@@ -6,14 +6,14 @@ import { useAuth } from "./AuthProvider";
 import ThemeToggle from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, LayoutDashboard, Shield, Menu, Package, Truck, Package2, Route, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
+import { LogOut, LayoutDashboard, Shield, Menu, Package, Truck, Package2, Route, ChevronLeft, ChevronRight, Building2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useSidebar } from "./SidebarProvider";
 
 export default function Sidebar() {
-	const { user, profile, signOut, isAdmin } = useAuth();
+	const { user, profile, signOut, isAdmin, loading } = useAuth();
 	const router = useRouter();
 	const pathname = usePathname();
 	const { collapsed, setCollapsed } = useSidebar();
@@ -127,12 +127,19 @@ export default function Sidebar() {
 			<div className="border-t border-gray-500/40 p-3 space-y-2">
 				{!collapsed && (
 					<div className="px-3 py-2 rounded-md bg-muted/50">
-						<div className="flex flex-col gap-1">
-							<span className="text-sm font-medium truncate">{profile?.full_name || user?.email}</span>
-							<Badge variant={profile?.role === "admin" ? "default" : "secondary"} className="h-5 text-xs w-fit">
-								{profile?.role === "admin" ? "Admin" : profile?.role === "planificador_rutas" ? "Planificador" : "Operario"}
-							</Badge>
-						</div>
+						{loading || !profile ? (
+							<div className="flex items-center gap-2">
+								<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+								<span className="text-sm text-muted-foreground">Cargando...</span>
+							</div>
+						) : (
+							<div className="flex flex-col gap-1">
+								<span className="text-sm font-medium truncate">{profile.full_name || user?.email}</span>
+								<Badge variant={profile.role === "admin" ? "default" : "secondary"} className="h-5 text-xs w-fit">
+									{profile.role === "admin" ? "Admin" : profile.role === "planificador_rutas" ? "Planificador" : "Operario"}
+								</Badge>
+							</div>
+						)}
 					</div>
 				)}
 
@@ -203,12 +210,19 @@ export default function Sidebar() {
 							{/* User Section */}
 							<div className="border-t border-gray-500/40 p-3 space-y-3">
 								<div className="px-3 py-2 rounded-md bg-muted/50">
-									<div className="flex flex-col gap-1">
-										<span className="text-sm font-medium truncate">{profile?.full_name || user?.email}</span>
-										<Badge variant={profile?.role === "admin" ? "default" : "secondary"} className="h-5 text-xs w-fit">
-											{profile?.role === "admin" ? "Admin" : profile?.role === "planificador_rutas" ? "Planificador" : "Operario"}
-										</Badge>
-									</div>
+									{loading || !profile ? (
+										<div className="flex items-center gap-2">
+											<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+											<span className="text-sm text-muted-foreground">Cargando...</span>
+										</div>
+									) : (
+										<div className="flex flex-col gap-1">
+											<span className="text-sm font-medium truncate">{profile.full_name || user?.email}</span>
+											<Badge variant={profile.role === "admin" ? "default" : "secondary"} className="h-5 text-xs w-fit">
+												{profile.role === "admin" ? "Admin" : profile.role === "planificador_rutas" ? "Planificador" : "Operario"}
+											</Badge>
+										</div>
+									)}
 								</div>
 
 								<div className="flex gap-2">

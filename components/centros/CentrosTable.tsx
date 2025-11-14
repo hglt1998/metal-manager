@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
+import { useCentros } from "@/hooks/useCentros";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,68 +10,24 @@ import { Trash2, Loader2, Mail, Phone, MapPin, Clock } from "lucide-react";
 import { CentroEditDialog } from "./CentroEditDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-type Centro = {
-	id: string;
-	nombre: string;
-	tipo: "remitente" | "destino" | "ambos";
-	direccion: string;
-	latitud: number | null;
-	longitud: number | null;
-	restriccion_altura_m: number | null;
-	restriccion_anchura_m: number | null;
-	restriccion_peso_kg: number | null;
-	horario_apertura: string | null;
-	horario_cierre: string | null;
-	dias_operacion: string | null;
-	contacto_nombre: string | null;
-	contacto_telefono: string | null;
-	contacto_email: string | null;
-	activo: boolean | null;
-	notas: string | null;
-	created_at: string;
-};
-
 export function CentrosTable() {
-	const [centros, setCentros] = useState<Centro[]>([]);
-	const [loading, setLoading] = useState(true);
+	const { centros, loading, deleteCentro } = useCentros();
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [deleting, setDeleting] = useState(false);
-	const supabase = createClient();
-
-	const fetchCentros = useCallback(async () => {
-		setLoading(true);
-
-		const { data, error } = await supabase.from("centros").select("*").order("nombre", { ascending: true });
-
-		if (error) {
-			console.error("Error al cargar centros:", error);
-		} else {
-			setCentros(data || []);
-		}
-
-		setLoading(false);
-	}, [supabase]);
-
-	useEffect(() => {
-		// eslint-disable-next-line react-hooks/set-state-in-effect
-		fetchCentros();
-	}, [fetchCentros]);
 
 	const handleDelete = async () => {
 		if (!deleteId) return;
 
 		setDeleting(true);
-		const { error } = await supabase.from("centros").delete().eq("id", deleteId);
-
-		if (error) {
+		try {
+			await deleteCentro(deleteId);
+		} catch (error) {
 			console.error("Error al eliminar centro:", error);
 			alert("Error al eliminar el centro. Puede que esté siendo usado en alguna ruta.");
-		} else {
-			await fetchCentros();
+		} finally {
+			setDeleting(false);
+			setDeleteId(null);
 		}
-
-		setDeleting(false);
-		setDeleteId(null);
 	};
 
 	if (loading) {
