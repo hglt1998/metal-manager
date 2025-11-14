@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useMateriales } from "@/hooks/useMateriales";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -19,32 +19,30 @@ export function MaterialFormDialog({ onSuccess }: MaterialFormDialogProps) {
 		nombre: "",
 		precio_kg: 0
 	});
-	const supabase = createClient();
+	const { createMaterial } = useMateriales({ autoLoad: false });
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
 
-		const { error } = await supabase.from("materiales").insert([
-			{
+		try {
+			await createMaterial({
 				nombre: formData.nombre,
 				precio_kg: formData.precio_kg
-			}
-		]);
+			});
 
-		if (error) {
-			console.error("Error al crear material:", error);
-			alert("Error al crear el material");
-		} else {
 			setFormData({ nombre: "", precio_kg: 0 });
 			setOpen(false);
 			// Llamar al callback onSuccess si existe
 			if (onSuccess) {
 				onSuccess();
 			}
+		} catch (error) {
+			console.error("Error al crear material:", error);
+			alert("Error al crear el material");
+		} finally {
+			setLoading(false);
 		}
-
-		setLoading(false);
 	};
 
 	return (

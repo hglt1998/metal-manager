@@ -12,9 +12,16 @@ export const createClient = () =>
 				if (typeof document === "undefined") {
 					return [];
 				}
-				return document.cookie.split("; ").filter(Boolean).map((cookie) => {
-					const [name, ...rest] = cookie.split("=");
-					return { name, value: rest.join("=") };
+				// Filtrar cookies vacías y parsear correctamente
+				const cookies = document.cookie.split("; ").filter(Boolean);
+				return cookies.map((cookie) => {
+					const equalsIndex = cookie.indexOf("=");
+					if (equalsIndex === -1) {
+						return { name: cookie, value: "" };
+					}
+					const name = cookie.substring(0, equalsIndex);
+					const value = cookie.substring(equalsIndex + 1);
+					return { name, value };
 				});
 			},
 			setAll(cookies) {
@@ -28,7 +35,8 @@ export const createClient = () =>
 					const path = options?.path || "/";
 					const domain = options?.domain ? `; domain=${options.domain}` : "";
 					const sameSite = options?.sameSite ? `; samesite=${options.sameSite}` : "; samesite=lax";
-					const secure = options?.secure ? "; secure" : "";
+					// En Safari móvil, es importante incluir Secure para cookies sensibles
+					const secure = options?.secure !== false ? "; secure" : "";
 					document.cookie = `${cookieString}; path=${path}${maxAge}${domain}${sameSite}${secure}`;
 				});
 			}

@@ -56,10 +56,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			}
 		};
 
-		// Obtener sesión inicial
-		const getSession = async () => {
+		// Obtener sesión inicial con reintentos para Safari móvil
+		const getSession = async (retries = 2) => {
 			setLoading(true);
 			try {
+				// Primero intentar obtener la sesión
 				const {
 					data: { session }
 				} = await supabase.auth.getSession();
@@ -67,10 +68,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				setUser(session?.user ?? null);
 
 				if (session?.user) {
-					await loadProfile(session.user.id);
+					const profileLoaded = await loadProfile(session.user.id);
+
+					// Si no se cargó el perfil y tenemos reintentos, intentar de nuevo
+					if (!profileLoaded && retries > 0) {
+						console.log("[AuthProvider] Retrying profile load...");
+						await new Promise(resolve => setTimeout(resolve, 300));
+						await loadProfile(session.user.id);
+					}
 				}
 			} catch (error) {
 				console.error("[AuthProvider] Error getting session:", error);
+
+				// Si hay error y tenemos reintentos, intentar de nuevo
+				if (retries > 0) {
+					console.log("[AuthProvider] Retrying session load...");
+					await new Promise(resolve => setTimeout(resolve, 500));
+					return getSession(retries - 1);
+				}
 			} finally {
 				setLoading(false);
 			}
@@ -164,8 +179,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		setProfile(null);
 	};
 
-	const isAdmin = profile?.role === "admin";
-	const isOperario = profile?.role === "operario";
+	// Solo determinar rol cuando no está cargando Y hay usuario
+	// Si está cargando, devolver false para evitar race conditions
+	const isAdmin = !loading && user !== null && profile?.role === "admin";
+	const isOperario = !loading && user !== null && profile?.role === "operario";
 
 	return (
 		<AuthContext.Provider
