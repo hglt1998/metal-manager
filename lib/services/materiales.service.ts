@@ -9,10 +9,10 @@ export class MaterialesService {
 	constructor(private supabase: SupabaseClient) {}
 
 	/**
-	 * Obtiene todos los materiales ordenados por nombre
+	 * Obtiene todos los materiales ordenados por material
 	 */
 	async getAllMateriales() {
-		const { data, error } = await this.supabase.from("materiales").select("*").order("nombre", { ascending: true });
+		const { data, error } = await this.supabase.from("materiales").select("*").order("material", { ascending: true });
 
 		if (error) {
 			throw new Error(`Error al cargar materiales: ${error.message}`);
