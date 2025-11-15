@@ -16,7 +16,12 @@ export function MaterialFormDialog({ onSuccess }: MaterialFormDialogProps) {
 	const [open, setOpen] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [formData, setFormData] = useState({
-		nombre: "",
+		material: "",
+		material_familia: "",
+		ler_01: "",
+		ler_02: "",
+		ler_03: "",
+		ler_04: "",
 		precio_kg: 0
 	});
 	const { createMaterial } = useMateriales({ autoLoad: false });
@@ -27,11 +32,16 @@ export function MaterialFormDialog({ onSuccess }: MaterialFormDialogProps) {
 
 		try {
 			await createMaterial({
-				nombre: formData.nombre,
+				material: formData.material,
+				material_familia: formData.material_familia || null,
+				ler_01: formData.ler_01 || null,
+				ler_02: formData.ler_02 || null,
+				ler_03: formData.ler_03 || null,
+				ler_04: formData.ler_04 || null,
 				precio_kg: formData.precio_kg
 			});
 
-			setFormData({ nombre: "", precio_kg: 0 });
+			setFormData({ material: "", material_familia: "", ler_01: "", ler_02: "", ler_03: "", ler_04: "", precio_kg: 0 });
 			setOpen(false);
 			// Llamar al callback onSuccess si existe
 			if (onSuccess) {
@@ -59,19 +69,81 @@ export function MaterialFormDialog({ onSuccess }: MaterialFormDialogProps) {
 						<DialogTitle>Nuevo Material</DialogTitle>
 						<DialogDescription>Agrega un nuevo tipo de material para las rutas de recogida.</DialogDescription>
 					</DialogHeader>
-					<div className="grid gap-4 py-4">
+					<div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
 						<div className="grid gap-2">
-							<Label htmlFor="nombre">
-								Nombre <span className="text-destructive">*</span>
+							<Label htmlFor="material">
+								Material <span className="text-destructive">*</span>
 							</Label>
 							<Input
-								id="nombre"
-								placeholder="Ej: Cartón, Plástico, Metal..."
-								value={formData.nombre}
-								onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+								id="material"
+								placeholder="Ej: acero inoxidable"
+								value={formData.material}
+								onChange={(e) => setFormData({ ...formData, material: e.target.value })}
 								required
 								disabled={loading}
 							/>
+						</div>
+						<div className="grid gap-2">
+							<Label htmlFor="material_familia">
+								Familia del Material
+							</Label>
+							<Input
+								id="material_familia"
+								placeholder="Ej: acero, plástico, madera"
+								value={formData.material_familia}
+								onChange={(e) => setFormData({ ...formData, material_familia: e.target.value })}
+								disabled={loading}
+							/>
+						</div>
+						<div className="grid grid-cols-2 gap-3">
+							<div className="grid gap-2">
+								<Label htmlFor="ler_01">
+									LER 01
+								</Label>
+								<Input
+									id="ler_01"
+									placeholder="16.01.17"
+									value={formData.ler_01}
+									onChange={(e) => setFormData({ ...formData, ler_01: e.target.value })}
+									disabled={loading}
+								/>
+							</div>
+							<div className="grid gap-2">
+								<Label htmlFor="ler_02">
+									LER 02
+								</Label>
+								<Input
+									id="ler_02"
+									placeholder="17.04.05"
+									value={formData.ler_02}
+									onChange={(e) => setFormData({ ...formData, ler_02: e.target.value })}
+									disabled={loading}
+								/>
+							</div>
+							<div className="grid gap-2">
+								<Label htmlFor="ler_03">
+									LER 03
+								</Label>
+								<Input
+									id="ler_03"
+									placeholder="19.12.02"
+									value={formData.ler_03}
+									onChange={(e) => setFormData({ ...formData, ler_03: e.target.value })}
+									disabled={loading}
+								/>
+							</div>
+							<div className="grid gap-2">
+								<Label htmlFor="ler_04">
+									LER 04
+								</Label>
+								<Input
+									id="ler_04"
+									placeholder="20.01.40"
+									value={formData.ler_04}
+									onChange={(e) => setFormData({ ...formData, ler_04: e.target.value })}
+									disabled={loading}
+								/>
+							</div>
 						</div>
 						<div className="grid gap-2">
 							<Label htmlFor="precio_kg">

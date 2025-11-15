@@ -41,21 +41,36 @@ export interface Database {
 			materiales: {
 				Row: {
 					id: string;
-					nombre: string;
+					material: string;
+					material_familia: string | null;
+					ler_01: string | null;
+					ler_02: string | null;
+					ler_03: string | null;
+					ler_04: string | null;
 					precio_kg: number;
 					created_at: string;
 					updated_at: string;
 				};
 				Insert: {
 					id?: string;
-					nombre: string;
+					material: string;
+					material_familia?: string | null;
+					ler_01?: string | null;
+					ler_02?: string | null;
+					ler_03?: string | null;
+					ler_04?: string | null;
 					precio_kg?: number;
 					created_at?: string;
 					updated_at?: string;
 				};
 				Update: {
 					id?: string;
-					nombre?: string;
+					material?: string;
+					material_familia?: string | null;
+					ler_01?: string | null;
+					ler_02?: string | null;
+					ler_03?: string | null;
+					ler_04?: string | null;
 					precio_kg?: number;
 					created_at?: string;
 					updated_at?: string;

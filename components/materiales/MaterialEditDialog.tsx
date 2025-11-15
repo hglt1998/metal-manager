@@ -18,7 +18,12 @@ import { Pencil, Loader2 } from "lucide-react";
 
 type Material = {
 	id: string;
-	nombre: string;
+	material: string;
+	material_familia: string | null;
+	ler_01: string | null;
+	ler_02: string | null;
+	ler_03: string | null;
+	ler_04: string | null;
 	precio_kg: number;
 };
 
@@ -31,7 +36,12 @@ export function MaterialEditDialog({ material, onSuccess }: MaterialEditDialogPr
 	const [open, setOpen] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [formData, setFormData] = useState({
-		nombre: material.nombre,
+		material: material.material,
+		material_familia: material.material_familia || "",
+		ler_01: material.ler_01 || "",
+		ler_02: material.ler_02 || "",
+		ler_03: material.ler_03 || "",
+		ler_04: material.ler_04 || "",
 		precio_kg: material.precio_kg,
 	});
 	const { updateMaterial } = useMateriales({ autoLoad: false });
@@ -42,7 +52,12 @@ export function MaterialEditDialog({ material, onSuccess }: MaterialEditDialogPr
 
 		try {
 			await updateMaterial(material.id, {
-				nombre: formData.nombre,
+				material: formData.material,
+				material_familia: formData.material_familia || null,
+				ler_01: formData.ler_01 || null,
+				ler_02: formData.ler_02 || null,
+				ler_03: formData.ler_03 || null,
+				ler_04: formData.ler_04 || null,
 				precio_kg: formData.precio_kg,
 			});
 
@@ -71,19 +86,81 @@ export function MaterialEditDialog({ material, onSuccess }: MaterialEditDialogPr
 							Modifica la información del material.
 						</DialogDescription>
 					</DialogHeader>
-					<div className="grid gap-4 py-4">
+					<div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
 						<div className="grid gap-2">
-							<Label htmlFor="edit-nombre">
-								Nombre <span className="text-destructive">*</span>
+							<Label htmlFor="edit-material">
+								Material <span className="text-destructive">*</span>
 							</Label>
 							<Input
-								id="edit-nombre"
-								placeholder="Ej: Cartón, Plástico, Metal..."
-								value={formData.nombre}
-								onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+								id="edit-material"
+								placeholder="Ej: acero inoxidable"
+								value={formData.material}
+								onChange={(e) => setFormData({ ...formData, material: e.target.value })}
 								required
 								disabled={loading}
 							/>
+						</div>
+						<div className="grid gap-2">
+							<Label htmlFor="edit-material_familia">
+								Familia del Material
+							</Label>
+							<Input
+								id="edit-material_familia"
+								placeholder="Ej: acero, plástico, madera"
+								value={formData.material_familia}
+								onChange={(e) => setFormData({ ...formData, material_familia: e.target.value })}
+								disabled={loading}
+							/>
+						</div>
+						<div className="grid grid-cols-2 gap-3">
+							<div className="grid gap-2">
+								<Label htmlFor="edit-ler_01">
+									LER 01
+								</Label>
+								<Input
+									id="edit-ler_01"
+									placeholder="16.01.17"
+									value={formData.ler_01}
+									onChange={(e) => setFormData({ ...formData, ler_01: e.target.value })}
+									disabled={loading}
+								/>
+							</div>
+							<div className="grid gap-2">
+								<Label htmlFor="edit-ler_02">
+									LER 02
+								</Label>
+								<Input
+									id="edit-ler_02"
+									placeholder="17.04.05"
+									value={formData.ler_02}
+									onChange={(e) => setFormData({ ...formData, ler_02: e.target.value })}
+									disabled={loading}
+								/>
+							</div>
+							<div className="grid gap-2">
+								<Label htmlFor="edit-ler_03">
+									LER 03
+								</Label>
+								<Input
+									id="edit-ler_03"
+									placeholder="19.12.02"
+									value={formData.ler_03}
+									onChange={(e) => setFormData({ ...formData, ler_03: e.target.value })}
+									disabled={loading}
+								/>
+							</div>
+							<div className="grid gap-2">
+								<Label htmlFor="edit-ler_04">
+									LER 04
+								</Label>
+								<Input
+									id="edit-ler_04"
+									placeholder="20.01.40"
+									value={formData.ler_04}
+									onChange={(e) => setFormData({ ...formData, ler_04: e.target.value })}
+									disabled={loading}
+								/>
+							</div>
 						</div>
 						<div className="grid gap-2">
 							<Label htmlFor="edit-precio_kg">
