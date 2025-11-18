@@ -69,7 +69,7 @@ export function MaterialFormDialog({ onSuccess }: MaterialFormDialogProps) {
 						<DialogTitle>Nuevo Material</DialogTitle>
 						<DialogDescription>Agrega un nuevo tipo de material para las rutas de recogida.</DialogDescription>
 					</DialogHeader>
-					<div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+					<div className="grid gap-4 py-4 px-1 max-h-[60vh] overflow-y-auto -mx-1">
 						<div className="grid gap-2">
 							<Label htmlFor="material">
 								Material <span className="text-destructive">*</span>

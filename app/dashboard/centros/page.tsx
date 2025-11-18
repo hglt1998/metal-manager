@@ -21,13 +21,13 @@ export default function CentrosPage() {
 
 	return (
 		<>
-			<div className="mb-8 sm:mb-10 flex items-start justify-between">
-				<div>
+			<div className="mb-6 flex items-start justify-between gap-4">
+				<div className="flex-1 min-w-0">
 					<div className="flex items-center gap-2">
-						<Building2 className="h-8 w-8 text-primary" />
-						<h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Centros</h1>
+						<Building2 className="h-7 w-7 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+						<h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Centros</h1>
 					</div>
-					<p className="mt-2 text-base sm:text-lg text-muted-foreground">
+					<p className="mt-1.5 sm:mt-2 text-sm sm:text-base md:text-lg text-muted-foreground">
 						Gestiona los centros de reciclaje y recogida
 					</p>
 				</div>

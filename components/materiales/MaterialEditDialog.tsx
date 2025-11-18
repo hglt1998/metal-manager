@@ -86,7 +86,7 @@ export function MaterialEditDialog({ material, onSuccess }: MaterialEditDialogPr
 							Modifica la información del material.
 						</DialogDescription>
 					</DialogHeader>
-					<div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+					<div className="grid gap-4 py-4 px-1 max-h-[60vh] overflow-y-auto -mx-1">
 						<div className="grid gap-2">
 							<Label htmlFor="edit-material">
 								Material <span className="text-destructive">*</span>
