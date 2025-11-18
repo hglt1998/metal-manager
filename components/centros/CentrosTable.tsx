@@ -32,8 +32,8 @@ export function CentrosTable() {
 
 	if (loading) {
 		return (
-			<Card>
-				<CardContent className="flex items-center justify-center py-10">
+			<Card className="border-none shadow-none md:border md:shadow-sm">
+				<CardContent className="flex items-center justify-center py-10 p-0 md:p-6">
 					<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
 				</CardContent>
 			</Card>
@@ -42,8 +42,8 @@ export function CentrosTable() {
 
 	if (centros.length === 0) {
 		return (
-			<Card>
-				<CardHeader>
+			<Card className="border-none shadow-none md:border md:shadow-sm">
+				<CardHeader className="px-0 md:px-6">
 					<CardTitle>No hay centros</CardTitle>
 					<CardDescription>Comienza agregando tu primer centro usando el botón de arriba.</CardDescription>
 				</CardHeader>
@@ -53,15 +53,9 @@ export function CentrosTable() {
 
 	return (
 		<>
-			<Card>
-				<CardHeader>
-					<CardTitle>Centros registrados</CardTitle>
-					<CardDescription>
-						Total de {centros.length} centro{centros.length !== 1 ? "s" : ""}
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div className="rounded-md border">
+			<Card className="border-none shadow-none md:border md:shadow-sm">
+				<CardContent className="p-0 md:p-6">
+					<div className="rounded-md border border-border/40">
 						<Table>
 							<TableHeader>
 								<TableRow>

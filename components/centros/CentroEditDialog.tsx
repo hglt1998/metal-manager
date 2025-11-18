@@ -106,7 +106,7 @@ export function CentroEditDialog({ centro, onSuccess }: CentroEditDialogProps) {
 					<Pencil className="h-4 w-4" />
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+			<DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-6 sm:p-8">
 				<form onSubmit={handleSubmit}>
 					<DialogHeader>
 						<DialogTitle>Editar Centro</DialogTitle>
