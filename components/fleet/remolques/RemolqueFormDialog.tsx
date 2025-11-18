@@ -23,8 +23,8 @@ export function RemolqueFormDialog({ onSuccess }: RemolqueFormDialogProps) {
 
 	const [formData, setFormData] = useState<RemolqueInsert>({
 		matricula: "",
-		batea: null,
-		activo: true,
+		tipo: null,
+		activo: true
 	});
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -40,8 +40,8 @@ export function RemolqueFormDialog({ onSuccess }: RemolqueFormDialogProps) {
 			setOpen(false);
 			setFormData({
 				matricula: "",
-				batea: null,
-				activo: true,
+				tipo: null,
+				activo: true
 			});
 			onSuccess();
 		} catch (error) {
@@ -71,23 +71,12 @@ export function RemolqueFormDialog({ onSuccess }: RemolqueFormDialogProps) {
 							<Label htmlFor="matricula">
 								Matrícula <span className="text-destructive">*</span>
 							</Label>
-							<Input
-								id="matricula"
-								value={formData.matricula}
-								onChange={(e) => setFormData({ ...formData, matricula: e.target.value })}
-								placeholder="Ej: R4440BCJ"
-								required
-							/>
+							<Input id="matricula" value={formData.matricula} onChange={(e) => setFormData({ ...formData, matricula: e.target.value })} placeholder="Ej: R4440BCJ" required />
 						</div>
 
 						<div className="grid gap-2">
-							<Label htmlFor="batea">Batea</Label>
-							<Input
-								id="batea"
-								value={formData.batea || ""}
-								onChange={(e) => setFormData({ ...formData, batea: e.target.value || null })}
-								placeholder="Ej: bañera aluminio"
-							/>
+							<Label htmlFor="tipo">Tipo</Label>
+							<Input id="tipo" value={formData.tipo || ""} onChange={(e) => setFormData({ ...formData, tipo: e.target.value || null })} placeholder="Ej: bañera aluminio" />
 						</div>
 
 						<div className="flex items-center justify-between">

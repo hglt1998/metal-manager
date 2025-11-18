@@ -24,15 +24,15 @@ export function RemolqueEditDialog({ remolque, onClose, onSuccess }: RemolqueEdi
 
 	const [formData, setFormData] = useState<RemolqueUpdate>({
 		matricula: remolque.matricula,
-		batea: remolque.batea,
-		activo: remolque.activo,
+		tipo: remolque.tipo,
+		activo: remolque.activo
 	});
 
 	useEffect(() => {
 		setFormData({
 			matricula: remolque.matricula,
-			batea: remolque.batea,
-			activo: remolque.activo,
+			tipo: remolque.tipo,
+			activo: remolque.activo
 		});
 	}, [remolque]);
 
@@ -68,32 +68,17 @@ export function RemolqueEditDialog({ remolque, onClose, onSuccess }: RemolqueEdi
 							<Label htmlFor="matricula">
 								Matrícula <span className="text-destructive">*</span>
 							</Label>
-							<Input
-								id="matricula"
-								value={formData.matricula || ""}
-								onChange={(e) => setFormData({ ...formData, matricula: e.target.value })}
-								placeholder="Ej: R4440BCJ"
-								required
-							/>
+							<Input id="matricula" value={formData.matricula || ""} onChange={(e) => setFormData({ ...formData, matricula: e.target.value })} placeholder="Ej: R4440BCJ" required />
 						</div>
 
 						<div className="grid gap-2">
-							<Label htmlFor="batea">Batea</Label>
-							<Input
-								id="batea"
-								value={formData.batea || ""}
-								onChange={(e) => setFormData({ ...formData, batea: e.target.value || null })}
-								placeholder="Ej: bañera aluminio"
-							/>
+							<Label htmlFor="tipo">Tipo</Label>
+							<Input id="tipo" value={formData.tipo || ""} onChange={(e) => setFormData({ ...formData, tipo: e.target.value || null })} placeholder="Ej: bañera aluminio" />
 						</div>
 
 						<div className="flex items-center justify-between">
 							<Label htmlFor="activo">Remolque activo</Label>
-							<Switch
-								id="activo"
-								checked={formData.activo || false}
-								onCheckedChange={(checked) => setFormData({ ...formData, activo: checked })}
-							/>
+							<Switch id="activo" checked={formData.activo || false} onCheckedChange={(checked) => setFormData({ ...formData, activo: checked })} />
 						</div>
 					</div>
 					<div className="flex justify-end gap-3">
