@@ -77,7 +77,7 @@ export function RemolquesSection({ remolques, loading, loadRemolques, deleteRemo
 								<TableHeader>
 									<TableRow>
 										<TableHead>Matrícula</TableHead>
-										<TableHead>Batea</TableHead>
+										<TableHead>Tipo</TableHead>
 										<TableHead>Estado</TableHead>
 										<TableHead className="text-right">Acciones</TableHead>
 									</TableRow>
@@ -86,7 +86,7 @@ export function RemolquesSection({ remolques, loading, loadRemolques, deleteRemo
 									{remolques.map((remolque) => (
 										<TableRow key={remolque.id}>
 											<TableCell className="font-medium">{remolque.matricula}</TableCell>
-											<TableCell>{capitalizeFirst(remolque.batea)}</TableCell>
+											<TableCell>{capitalizeFirst(remolque.tipo)}</TableCell>
 											<TableCell>
 												<Badge variant={remolque.activo ? "default" : "secondary"}>{remolque.activo ? "Activo" : "Inactivo"}</Badge>
 											</TableCell>
