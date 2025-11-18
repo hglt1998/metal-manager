@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Database } from "@/types/database";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -22,6 +22,16 @@ export function useUserEdit({ user, isAdmin, currentUserId }: UseUserEditOptions
 		role: user?.role || "operario",
 	});
 	const [saving, setSaving] = useState(false);
+
+	// Sincronizar el estado cuando cambia el usuario
+	useEffect(() => {
+		if (user) {
+			setFormData({
+				fullName: user.full_name || "",
+				role: user.role || "operario",
+			});
+		}
+	}, [user]);
 
 	// Permisos - calculados, no almacenados
 	const canEditRole = isAdmin && user?.id !== currentUserId;
