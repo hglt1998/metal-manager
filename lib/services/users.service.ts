@@ -47,19 +47,28 @@ export class UsersService {
 			safeUpdates.role = updates.role;
 		}
 
-		// Realizar la actualización con select("*") para obtener los datos actualizados
-		const { data, error } = await this.supabase
+		// Realizar la actualización
+		const { error } = await this.supabase
 			.from("profiles")
 			.update(safeUpdates)
-			.eq("id", userId)
-			.select("*")
-			.single();
+			.eq("id", userId);
 
 		if (error) {
 			throw new Error(`Error al actualizar usuario: ${error.message}`);
 		}
 
-		return data;
+		// Obtener el usuario actualizado en una consulta separada
+		const { data: updatedUser, error: fetchError } = await this.supabase
+			.from("profiles")
+			.select("*")
+			.eq("id", userId)
+			.single();
+
+		if (fetchError) {
+			throw new Error(`Error al obtener usuario actualizado: ${fetchError.message}`);
+		}
+
+		return updatedUser;
 	}
 
 	/**
