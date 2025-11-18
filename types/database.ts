@@ -141,6 +141,84 @@ export interface Database {
 					updated_at?: string;
 				};
 			};
+			vehiculos: {
+				Row: {
+					id: string;
+					matricula: string;
+					tipo: string;
+					activo: boolean;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					matricula: string;
+					tipo: string;
+					activo?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					matricula?: string;
+					tipo?: string;
+					activo?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+			};
+			remolques: {
+				Row: {
+					id: string;
+					matricula: string;
+					batea: string | null;
+					activo: boolean;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					matricula: string;
+					batea?: string | null;
+					activo?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					matricula?: string;
+					batea?: string | null;
+					activo?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+			};
+			contenedores: {
+				Row: {
+					id: string;
+					codigo: string;
+					tipo: string;
+					activo: boolean;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					codigo: string;
+					tipo: string;
+					activo?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					codigo?: string;
+					tipo?: string;
+					activo?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+			};
 		};
 		Views: {
 			[_ in never]: never;
