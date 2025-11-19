@@ -11,18 +11,13 @@ import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { createVehiculosService } from "@/lib/services/vehiculos.service";
 import type { Database } from "@/types/database";
+import { TIPOS_VEHICULO } from "@/types/vehiculos";
 
 type VehiculoInsert = Database["public"]["Tables"]["vehiculos"]["Insert"];
 
 interface VehiculoFormDialogProps {
 	onSuccess: () => void;
 }
-
-const TIPOS_VEHICULO = [
-	{ value: "furgón", label: "Furgón" },
-	{ value: "camión", label: "Camión" },
-	{ value: "bañera", label: "Bañera" },
-];
 
 export function VehiculoFormDialog({ onSuccess }: VehiculoFormDialogProps) {
 	const [open, setOpen] = useState(false);
@@ -31,7 +26,7 @@ export function VehiculoFormDialog({ onSuccess }: VehiculoFormDialogProps) {
 	const [formData, setFormData] = useState<VehiculoInsert>({
 		matricula: "",
 		tipo: "furgón",
-		activo: true,
+		activo: true
 	});
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -48,7 +43,7 @@ export function VehiculoFormDialog({ onSuccess }: VehiculoFormDialogProps) {
 			setFormData({
 				matricula: "",
 				tipo: "furgón",
-				activo: true,
+				activo: true
 			});
 			onSuccess();
 		} catch (error) {
@@ -78,13 +73,7 @@ export function VehiculoFormDialog({ onSuccess }: VehiculoFormDialogProps) {
 							<Label htmlFor="matricula">
 								Matrícula <span className="text-destructive">*</span>
 							</Label>
-							<Input
-								id="matricula"
-								value={formData.matricula}
-								onChange={(e) => setFormData({ ...formData, matricula: e.target.value })}
-								placeholder="Ej: 1387/LXY"
-								required
-							/>
+							<Input id="matricula" value={formData.matricula} onChange={(e) => setFormData({ ...formData, matricula: e.target.value })} placeholder="Ej: 1387LXY" required />
 						</div>
 
 						<div className="grid gap-2">
