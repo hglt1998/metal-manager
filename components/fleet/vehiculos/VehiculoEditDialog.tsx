@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { createClient } from "@/lib/supabase/client";
 import { createVehiculosService } from "@/lib/services/vehiculos.service";
 import type { Database } from "@/types/database";
+import { TIPOS_VEHICULO } from "@/types/vehiculos";
 
 type Vehiculo = Database["public"]["Tables"]["vehiculos"]["Row"];
 type VehiculoUpdate = Database["public"]["Tables"]["vehiculos"]["Update"];
@@ -19,18 +20,6 @@ interface VehiculoEditDialogProps {
 	onClose: () => void;
 	onSuccess: () => void;
 }
-
-const TIPOS_VEHICULO = [
-	{ value: "furgón", label: "Furgón" },
-	{ value: "furgón abierto", label: "Furgón abierto" },
-	{ value: "camión", label: "Camión" },
-	{ value: "bañera", label: "Bañera" },
-	{ value: "paquetero", label: "Paquetero" },
-	{ value: "camión rojo", label: "Camión rojo" },
-	{ value: "camión abierto", label: "Camión abierto" },
-	{ value: "camión pulpo", label: "Camión pulpo" },
-	{ value: "camión contenedor", label: "Camión contenedor" }
-];
 
 export function VehiculoEditDialog({ vehiculo, onClose, onSuccess }: VehiculoEditDialogProps) {
 	const [saving, setSaving] = useState(false);
