@@ -49,7 +49,7 @@ export function CentroFormDialog({ onSuccess }: CentroFormDialogProps) {
 					Nuevo Centro
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+			<DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-6 sm:p-8">
 				<form onSubmit={handleSubmit}>
 					<DialogHeader>
 						<DialogTitle>Nuevo Centro</DialogTitle>
