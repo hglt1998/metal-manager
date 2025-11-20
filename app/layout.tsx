@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -30,14 +30,15 @@ export const metadata: Metadata = {
 			{ url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" }
 		],
 		apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }]
-	},
-	viewport: {
-		width: "device-width",
-		initialScale: 1,
-		maximumScale: 1,
-		userScalable: false,
-		viewportFit: "cover"
-	},
+	}
+};
+
+export const viewport: Viewport = {
+	width: "device-width",
+	initialScale: 1,
+	maximumScale: 1,
+	userScalable: false,
+	viewportFit: "cover",
 	themeColor: [
 		{ media: "(prefers-color-scheme: light)", color: "#ffffff" },
 		{ media: "(prefers-color-scheme: dark)", color: "#000000" }
