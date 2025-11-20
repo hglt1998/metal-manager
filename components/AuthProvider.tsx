@@ -53,14 +53,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			}
 		};
 
-		// Obtener sesión inicial con reintentos para Safari móvil
+		// Obtener sesión inicial con reintentos y recuperación de errores
 		const getSession = async (retries = 2) => {
 			setLoading(true);
 			try {
 				// Primero intentar obtener la sesión
 				const {
-					data: { session }
+					data: { session },
+					error
 				} = await supabase.auth.getSession();
+
+				// Si hay error de sesión corrupta, limpiar y reintentar
+				if (error) {
+					console.error("[AuthProvider] Session error:", error);
+
+					// Si el error es de sesión inválida/corrupta, limpiar y reintentar
+					if (error.message?.includes('session') || error.message?.includes('invalid')) {
+						console.warn("[AuthProvider] Detected corrupted session, clearing...");
+						await supabase.auth.signOut();
+
+						if (retries > 0) {
+							await new Promise((resolve) => setTimeout(resolve, 500));
+							return getSession(retries - 1);
+						}
+					}
+
+					// Para otros errores, establecer estado vacío
+					setUser(null);
+					currentUserIdRef.current = null;
+					return;
+				}
 
 				setUser(session?.user ?? null);
 				currentUserIdRef.current = session?.user?.id ?? null;
@@ -76,14 +98,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 					}
 				}
 			} catch (error) {
-				console.error("[AuthProvider] Error getting session:", error);
+				console.error("[AuthProvider] Exception getting session:", error);
+
+				// Intentar limpiar la sesión corrupta
+				try {
+					await supabase.auth.signOut();
+				} catch (signOutError) {
+					console.error("[AuthProvider] Failed to sign out:", signOutError);
+				}
 
 				// Si hay error y tenemos reintentos, intentar de nuevo
 				if (retries > 0) {
-					console.log("[AuthProvider] Retrying session load...");
+					console.log("[AuthProvider] Retrying session load after exception...");
 					await new Promise((resolve) => setTimeout(resolve, 500));
 					return getSession(retries - 1);
 				}
+
+				// Establecer estado vacío si todos los reintentos fallan
+				setUser(null);
+				currentUserIdRef.current = null;
 			} finally {
 				setLoading(false);
 			}
