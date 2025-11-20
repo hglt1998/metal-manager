@@ -30,17 +30,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [profile, setProfile] = useState<Profile | null>(null);
 	const [loading, setLoading] = useState(true);
 	const supabase = createClient();
-	const isRefreshingRef = useRef(false);
-	const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const currentUserIdRef = useRef<string | null>(null);
 
 	useEffect(() => {
 		const loadProfile = async (userId: string) => {
 			try {
-				const { data, error } = await supabase
-					.from("profiles")
-					.select("*")
-					.eq("id", userId)
-					.single();
+				const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
 
 				if (error) {
 					console.error("[AuthProvider] Error loading profile:", error);
@@ -68,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				} = await supabase.auth.getSession();
 
 				setUser(session?.user ?? null);
+				currentUserIdRef.current = session?.user?.id ?? null;
 
 				if (session?.user) {
 					const profileLoaded = await loadProfile(session.user.id);
@@ -75,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 					// Si no se cargó el perfil y tenemos reintentos, intentar de nuevo
 					if (!profileLoaded && retries > 0) {
 						console.log("[AuthProvider] Retrying profile load...");
-						await new Promise(resolve => setTimeout(resolve, 300));
+						await new Promise((resolve) => setTimeout(resolve, 300));
 						await loadProfile(session.user.id);
 					}
 				}
@@ -85,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				// Si hay error y tenemos reintentos, intentar de nuevo
 				if (retries > 0) {
 					console.log("[AuthProvider] Retrying session load...");
-					await new Promise(resolve => setTimeout(resolve, 500));
+					await new Promise((resolve) => setTimeout(resolve, 500));
 					return getSession(retries - 1);
 				}
 			} finally {
@@ -98,60 +94,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		const {
 			data: { subscription }
 		} = supabase.auth.onAuthStateChange(async (_event, session) => {
-			console.log("[AuthProvider] Auth state change:", _event);
-			setLoading(true);
-			setUser(session?.user ?? null);
-			if (session?.user) {
-				await loadProfile(session.user.id);
+			if (_event === "INITIAL_SESSION" || _event === "TOKEN_REFRESHED") {
+				return;
+			}
+
+			const newUser = session?.user ?? null;
+			const newUserId = newUser?.id ?? null;
+
+			// Si el usuario es el mismo que ya tenemos, ignorar
+			if (newUserId === currentUserIdRef.current) {
+				return;
+			}
+
+			// Solo mostrar loading en eventos de login/logout
+			const shouldShowLoading = _event === "SIGNED_IN" || _event === "SIGNED_OUT";
+
+			if (shouldShowLoading) {
+				setLoading(true);
+			}
+
+			// Actualizar usuario y ref
+			setUser(newUser);
+			currentUserIdRef.current = newUserId;
+
+			// Solo cargar perfil si hay usuario
+			if (newUser) {
+				await loadProfile(newUser.id);
 			} else {
 				setProfile(null);
 			}
-			setLoading(false);
+
+			if (shouldShowLoading) {
+				setLoading(false);
+			}
 		});
 
-		// Handle app visibility changes (important for mobile)
-		const handleVisibilityChange = () => {
-			if (document.visibilityState === "visible" && !isRefreshingRef.current) {
-				// Debounce: esperar 200ms antes de refrescar para evitar múltiples llamadas
-				if (refreshTimeoutRef.current) {
-					clearTimeout(refreshTimeoutRef.current);
-				}
-
-				refreshTimeoutRef.current = setTimeout(async () => {
-					isRefreshingRef.current = true;
-					console.log("[AuthProvider] App became visible, refreshing session...");
-
-					try {
-						// App returned to foreground - refresh session and profile
-						const {
-							data: { session }
-						} = await supabase.auth.getSession();
-
-						setUser(session?.user ?? null);
-
-						if (session?.user) {
-							// Reload profile to ensure it's current
-							await loadProfile(session.user.id);
-						} else {
-							setProfile(null);
-						}
-					} catch (error) {
-						console.error("[AuthProvider] Error refreshing on visibility change:", error);
-					} finally {
-						isRefreshingRef.current = false;
-					}
-				}, 200);
-			}
-		};
-
-		document.addEventListener("visibilitychange", handleVisibilityChange);
-
 		return () => {
-			if (refreshTimeoutRef.current) {
-				clearTimeout(refreshTimeoutRef.current);
-			}
 			subscription.unsubscribe();
-			document.removeEventListener("visibilitychange", handleVisibilityChange);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
