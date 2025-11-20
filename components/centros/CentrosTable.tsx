@@ -6,8 +6,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Loader2, Mail, Phone, MapPin, Clock } from "lucide-react";
+import { Trash2, Loader2, Mail, Phone, MapPin, Clock, ChevronDown } from "lucide-react";
 import { CentroEditDialog } from "./CentroEditDialog";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export function CentrosTable() {
@@ -109,19 +115,49 @@ export function CentrosTable() {
 										<TableCell>
 											<div className="flex flex-col gap-1">
 												{centro.contacto_nombre && <span className="text-sm font-medium">{centro.contacto_nombre}</span>}
-												{centro.contacto_telefono && (
-													<div className="flex items-center gap-2 text-sm">
-														<Phone className="h-3 w-3 text-muted-foreground" />
-														<span>{centro.contacto_telefono}</span>
-													</div>
+												{!centro.contacto_email && !centro.contacto_telefono ? (
+													<span className="text-sm text-muted-foreground">Sin contacto</span>
+												) : (
+													<DropdownMenu>
+														<DropdownMenuTrigger asChild>
+															<Button variant="outline" size="sm" className="h-8 gap-1">
+																<Mail className="h-3 w-3" />
+																Contactar
+																<ChevronDown className="h-3 w-3" />
+															</Button>
+														</DropdownMenuTrigger>
+														<DropdownMenuContent align="start" className="w-56">
+															{centro.contacto_email && (
+																<DropdownMenuItem asChild className="cursor-pointer">
+																	<a
+																		href={`mailto:${centro.contacto_email}`}
+																		className="flex items-center gap-3"
+																	>
+																		<Mail className="h-4 w-4 text-muted-foreground" />
+																		<div className="flex flex-col gap-0.5">
+																			<span className="text-xs text-muted-foreground">Email</span>
+																			<span className="text-sm">{centro.contacto_email}</span>
+																		</div>
+																	</a>
+																</DropdownMenuItem>
+															)}
+															{centro.contacto_telefono && (
+																<DropdownMenuItem asChild className="cursor-pointer">
+																	<a
+																		href={`tel:${centro.contacto_telefono}`}
+																		className="flex items-center gap-3"
+																	>
+																		<Phone className="h-4 w-4 text-muted-foreground" />
+																		<div className="flex flex-col gap-0.5">
+																			<span className="text-xs text-muted-foreground">Teléfono</span>
+																			<span className="text-sm">{centro.contacto_telefono}</span>
+																		</div>
+																	</a>
+																</DropdownMenuItem>
+															)}
+														</DropdownMenuContent>
+													</DropdownMenu>
 												)}
-												{centro.contacto_email && (
-													<div className="flex items-center gap-2 text-sm">
-														<Mail className="h-3 w-3 text-muted-foreground" />
-														<span className="truncate">{centro.contacto_email}</span>
-													</div>
-												)}
-												{!centro.contacto_nombre && !centro.contacto_telefono && !centro.contacto_email && <span className="text-sm text-muted-foreground">Sin contacto</span>}
 											</div>
 										</TableCell>
 										<TableCell>
