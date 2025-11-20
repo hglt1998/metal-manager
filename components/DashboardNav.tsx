@@ -16,7 +16,7 @@ export default function DashboardNav() {
 	const pathname = usePathname();
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-	const canManageData = profile && ['admin', 'planificador_rutas'].includes(profile.role);
+	const canManageData = profile && profile.role && ['admin', 'planificador_rutas'].includes(profile.role);
 
 	const handleSignOut = async () => {
 		try {

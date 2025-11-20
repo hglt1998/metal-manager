@@ -7,7 +7,7 @@ export default function RutasPage() {
 	const { profile } = useAuth();
 
 	// Planificadores y admins pueden crear, operarios solo ver sus rutas
-	const canManageRutas = profile && ["admin", "planificador_rutas"].includes(profile.role);
+	const canManageRutas = profile && profile.role && ["admin", "planificador_rutas"].includes(profile.role);
 
 	return (
 		<div className="mb-6">
