@@ -1,27 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Pencil, Trash2, Mail, Phone, ChevronDown } from "lucide-react";
+import { Loader2, Pencil, Trash2, Mail, Phone, ChevronDown, MoreVertical } from "lucide-react";
 import { ClienteFormDialog } from "./ClienteFormDialog";
 import { ClienteEditDialog } from "./ClienteEditDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { ClienteWithCentros } from "@/lib/services/clientes.service";
-import type { TipoCliente } from "@/types/database";
-
-const TIPOS_CLIENTE_LABELS: Record<TipoCliente, string> = {
-	remitente: "Remitente",
-	destinatario: "Destinatario",
-	proveedor: "Proveedor",
-	cliente: "Cliente",
-	agente_aduanas: "Agente de Aduanas",
-	transitario: "Transitario",
-	transportista: "Transportista",
-};
+import { TIPOS_CLIENTE_LABELS } from "@/lib/constants/clientes.constants";
+import { getClienteStatusClass, hasContactInfo } from "@/lib/utils/clientes.utils";
 
 interface ClientesSectionProps {
 	clientes: ClienteWithCentros[];
@@ -76,43 +68,59 @@ export function ClientesSection({ clientes, loading, loadClientes, deleteCliente
 							<TableHeader>
 								<TableRow>
 									<TableHead>Nombre</TableHead>
-									<TableHead>CIF</TableHead>
+									<TableHead className="hidden md:table-cell">CIF</TableHead>
 									<TableHead>Tipo de Cliente</TableHead>
-									<TableHead>Persona de Contacto</TableHead>
-									<TableHead>Contacto</TableHead>
-									<TableHead>Centros Asociados</TableHead>
-									<TableHead>Estado</TableHead>
+									<TableHead className="hidden lg:table-cell">Persona de Contacto</TableHead>
+									<TableHead className="hidden lg:table-cell">Contacto</TableHead>
+									<TableHead className="hidden xl:table-cell">Centros Asociados</TableHead>
 									<TableHead className="text-right">Acciones</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
 								{clientes.length === 0 ? (
 									<TableRow>
-										<TableCell colSpan={8} className="text-center text-muted-foreground">
+										<TableCell colSpan={7} className="text-center text-muted-foreground">
 											No hay clientes registrados
 										</TableCell>
 									</TableRow>
 								) : (
 									clientes.map((cliente) => (
-										<TableRow key={cliente.id}>
-											<TableCell className="font-medium">{cliente.nombre}</TableCell>
-											<TableCell>{cliente.cif}</TableCell>
+										<TableRow
+											key={cliente.id}
+											className={cliente.activo ? "" : "opacity-50 text-muted-foreground"}
+										>
+											<TableCell className="font-medium">
+												<div className="flex items-center gap-2">
+													<div className={`w-2 h-2 rounded-full flex-shrink-0 ${getClienteStatusClass(cliente.activo)}`} />
+													<Link
+														href={`/dashboard/clientes/${cliente.id}`}
+														className="hover:underline hover:text-primary transition-colors"
+													>
+														{cliente.nombre}
+													</Link>
+												</div>
+											</TableCell>
+											<TableCell className="hidden md:table-cell">{cliente.cif}</TableCell>
 											<TableCell>
 												<div className="flex flex-wrap gap-1">
 													{cliente.tipo_cliente && cliente.tipo_cliente.length > 0 ? (
-														cliente.tipo_cliente.map((tipo) => (
-															<Badge key={tipo} variant="secondary" className="text-xs">
-																{TIPOS_CLIENTE_LABELS[tipo]}
+														cliente.tipo_cliente.length === 1 ? (
+															<Badge variant="secondary" className="text-xs">
+																{TIPOS_CLIENTE_LABELS[cliente.tipo_cliente[0]]}
 															</Badge>
-														))
+														) : (
+															<Badge variant="secondary" className="text-xs">
+																{cliente.tipo_cliente.length} tipos
+															</Badge>
+														)
 													) : (
 														<span className="text-sm text-muted-foreground">Sin tipo</span>
 													)}
 												</div>
 											</TableCell>
-											<TableCell>{cliente.persona_contacto || "-"}</TableCell>
-											<TableCell>
-												{!cliente.email_contacto && !cliente.telefono_contacto ? (
+											<TableCell className="hidden lg:table-cell">{cliente.persona_contacto || "-"}</TableCell>
+											<TableCell className="hidden lg:table-cell">
+												{!hasContactInfo(cliente.email_contacto, cliente.telefono_contacto) ? (
 													<span className="text-sm text-muted-foreground">Sin contacto</span>
 												) : (
 													<DropdownMenu>
@@ -150,7 +158,7 @@ export function ClientesSection({ clientes, loading, loadClientes, deleteCliente
 													</DropdownMenu>
 												)}
 											</TableCell>
-											<TableCell>
+											<TableCell className="hidden xl:table-cell">
 												<div className="flex flex-wrap gap-1">
 													{cliente.centros && cliente.centros.length > 0 ? (
 														cliente.centros.map((centro) => (
@@ -163,18 +171,27 @@ export function ClientesSection({ clientes, loading, loadClientes, deleteCliente
 													)}
 												</div>
 											</TableCell>
-											<TableCell>
-												<Badge variant={cliente.activo ? "default" : "secondary"}>{cliente.activo ? "Activo" : "Inactivo"}</Badge>
-											</TableCell>
 											<TableCell className="text-right">
-												<div className="flex justify-end gap-2">
-													<Button variant="ghost" size="sm" onClick={() => setEditingCliente(cliente)} className="h-8 w-8 p-0">
-														<Pencil className="h-4 w-4" />
-													</Button>
-													<Button variant="ghost" size="sm" onClick={() => setDeleteId(cliente.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
-														<Trash2 className="h-4 w-4" />
-													</Button>
-												</div>
+												<DropdownMenu>
+													<DropdownMenuTrigger asChild>
+														<Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+															<MoreVertical className="h-4 w-4" />
+														</Button>
+													</DropdownMenuTrigger>
+													<DropdownMenuContent align="end" className="border-none shadow-lg">
+														<DropdownMenuItem onClick={() => setEditingCliente(cliente)} className="cursor-pointer">
+															<Pencil className="h-4 w-4 mr-2" />
+															Editar
+														</DropdownMenuItem>
+														<DropdownMenuItem
+															onClick={() => setDeleteId(cliente.id)}
+															className="cursor-pointer text-destructive focus:text-destructive"
+														>
+															<Trash2 className="h-4 w-4 mr-2" />
+															Eliminar
+														</DropdownMenuItem>
+													</DropdownMenuContent>
+												</DropdownMenu>
 											</TableCell>
 										</TableRow>
 									))

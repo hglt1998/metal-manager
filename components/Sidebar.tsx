@@ -19,7 +19,7 @@ export default function Sidebar() {
 	const { collapsed, setCollapsed } = useSidebar();
 	const [mobileOpen, setMobileOpen] = useState(false);
 
-	const canManageData = profile && ["admin", "planificador_rutas"].includes(profile.role);
+	const canManageData = profile && profile.role && ["admin", "planificador_rutas"].includes(profile.role);
 
 	const handleSignOut = async () => {
 		try {
