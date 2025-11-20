@@ -8,6 +8,7 @@ export type Json =
 
 export type UserRole = "admin" | "operario" | "planificador_rutas";
 export type TipoCentro = "remitente" | "destino" | "ambos";
+export type TipoCliente = "remitente" | "destinatario" | "proveedor" | "cliente" | "agente_aduanas" | "transitario" | "transportista";
 
 export interface Database {
 	public: {
@@ -217,6 +218,67 @@ export interface Database {
 					activo?: boolean;
 					created_at?: string;
 					updated_at?: string;
+				};
+			};
+			clientes: {
+				Row: {
+					id: string;
+					nombre: string;
+					cif: string;
+					direccion: string | null;
+					email_contacto: string | null;
+					telefono_contacto: string | null;
+					persona_contacto: string | null;
+					tipo_cliente: TipoCliente[];
+					activo: boolean;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					nombre: string;
+					cif: string;
+					direccion?: string | null;
+					email_contacto?: string | null;
+					telefono_contacto?: string | null;
+					persona_contacto?: string | null;
+					tipo_cliente?: TipoCliente[];
+					activo?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					nombre?: string;
+					cif?: string;
+					direccion?: string | null;
+					email_contacto?: string | null;
+					telefono_contacto?: string | null;
+					persona_contacto?: string | null;
+					tipo_cliente?: TipoCliente[];
+					activo?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+			};
+			cliente_centros: {
+				Row: {
+					id: string;
+					cliente_id: string;
+					centro_id: string;
+					created_at: string;
+				};
+				Insert: {
+					id?: string;
+					cliente_id: string;
+					centro_id: string;
+					created_at?: string;
+				};
+				Update: {
+					id?: string;
+					cliente_id?: string;
+					centro_id?: string;
+					created_at?: string;
 				};
 			};
 		};
