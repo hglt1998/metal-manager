@@ -11,7 +11,7 @@ export default function CentrosPage() {
 	const [refreshKey, setRefreshKey] = useState(0);
 
 	// Solo admins y planificadores pueden acceder
-	if (!profile || !['admin', 'planificador_rutas'].includes(profile.role)) {
+	if (!profile || !profile.role || !['admin', 'planificador_rutas'].includes(profile.role)) {
 		return <p className="text-muted-foreground">No tienes permisos para acceder a esta página.</p>;
 	}
 
