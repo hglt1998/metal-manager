@@ -7,16 +7,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import type { TipoCliente } from "@/types/database";
-
-const TIPOS_CLIENTE: { value: TipoCliente; label: string }[] = [
-	{ value: "remitente", label: "Remitente" },
-	{ value: "destinatario", label: "Destinatario" },
-	{ value: "proveedor", label: "Proveedor" },
-	{ value: "cliente", label: "Cliente" },
-	{ value: "agente_aduanas", label: "Agente de Aduanas" },
-	{ value: "transitario", label: "Transitario" },
-	{ value: "transportista", label: "Transportista" },
-];
+import { TIPOS_CLIENTE_OPTIONS } from "@/lib/constants/clientes.constants";
+import { getTipoClienteLabel } from "@/lib/utils/clientes.utils";
 
 interface TipoClienteSelectProps {
 	value: TipoCliente[];
@@ -39,10 +31,6 @@ export function TipoClienteSelect({ value, onChange, disabled }: TipoClienteSele
 		onChange(value.filter((t) => t !== tipo));
 	};
 
-	const getLabel = (tipo: TipoCliente) => {
-		return TIPOS_CLIENTE.find((t) => t.value === tipo)?.label || tipo;
-	};
-
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
@@ -59,7 +47,7 @@ export function TipoClienteSelect({ value, onChange, disabled }: TipoClienteSele
 						) : (
 							value.map((tipo) => (
 								<Badge key={tipo} variant="secondary" className="gap-1">
-									{getLabel(tipo)}
+									{getTipoClienteLabel(tipo)}
 									<X
 										className="h-3 w-3 cursor-pointer hover:text-destructive"
 										onClick={(e) => removeTipo(tipo, e)}
@@ -73,7 +61,7 @@ export function TipoClienteSelect({ value, onChange, disabled }: TipoClienteSele
 			</PopoverTrigger>
 			<PopoverContent className="w-full p-0" align="start">
 				<div className="max-h-64 overflow-auto p-1">
-					{TIPOS_CLIENTE.map((tipo) => (
+					{TIPOS_CLIENTE_OPTIONS.map((tipo) => (
 						<div
 							key={tipo.value}
 							className="flex items-center space-x-2 rounded-sm px-2 py-1.5 hover:bg-accent cursor-pointer"

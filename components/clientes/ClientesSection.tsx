@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -11,17 +12,8 @@ import { ClienteEditDialog } from "./ClienteEditDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { ClienteWithCentros } from "@/lib/services/clientes.service";
-import type { TipoCliente } from "@/types/database";
-
-const TIPOS_CLIENTE_LABELS: Record<TipoCliente, string> = {
-	remitente: "Remitente",
-	destinatario: "Destinatario",
-	proveedor: "Proveedor",
-	cliente: "Cliente",
-	agente_aduanas: "Agente de Aduanas",
-	transitario: "Transitario",
-	transportista: "Transportista",
-};
+import { TIPOS_CLIENTE_LABELS } from "@/lib/constants/clientes.constants";
+import { getClienteStatusClass, hasContactInfo } from "@/lib/utils/clientes.utils";
 
 interface ClientesSectionProps {
 	clientes: ClienteWithCentros[];
@@ -81,14 +73,13 @@ export function ClientesSection({ clientes, loading, loadClientes, deleteCliente
 									<TableHead className="hidden lg:table-cell">Persona de Contacto</TableHead>
 									<TableHead className="hidden lg:table-cell">Contacto</TableHead>
 									<TableHead className="hidden xl:table-cell">Centros Asociados</TableHead>
-									<TableHead className="hidden md:table-cell">Estado</TableHead>
 									<TableHead className="text-right">Acciones</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
 								{clientes.length === 0 ? (
 									<TableRow>
-										<TableCell colSpan={8} className="text-center text-muted-foreground">
+										<TableCell colSpan={7} className="text-center text-muted-foreground">
 											No hay clientes registrados
 										</TableCell>
 									</TableRow>
@@ -99,11 +90,14 @@ export function ClientesSection({ clientes, loading, loadClientes, deleteCliente
 											className={cliente.activo ? "" : "opacity-50 text-muted-foreground"}
 										>
 											<TableCell className="font-medium">
-												<div className="flex flex-col gap-1">
-													<span className={cliente.activo ? "" : "line-through"}>{cliente.nombre}</span>
-													{!cliente.activo && (
-														<Badge variant="secondary" className="w-fit text-xs">Inactivo</Badge>
-													)}
+												<div className="flex items-center gap-2">
+													<div className={`w-2 h-2 rounded-full flex-shrink-0 ${getClienteStatusClass(cliente.activo)}`} />
+													<Link
+														href={`/dashboard/clientes/${cliente.id}`}
+														className="hover:underline hover:text-primary transition-colors"
+													>
+														{cliente.nombre}
+													</Link>
 												</div>
 											</TableCell>
 											<TableCell className="hidden md:table-cell">{cliente.cif}</TableCell>
@@ -126,7 +120,7 @@ export function ClientesSection({ clientes, loading, loadClientes, deleteCliente
 											</TableCell>
 											<TableCell className="hidden lg:table-cell">{cliente.persona_contacto || "-"}</TableCell>
 											<TableCell className="hidden lg:table-cell">
-												{!cliente.email_contacto && !cliente.telefono_contacto ? (
+												{!hasContactInfo(cliente.email_contacto, cliente.telefono_contacto) ? (
 													<span className="text-sm text-muted-foreground">Sin contacto</span>
 												) : (
 													<DropdownMenu>
@@ -176,9 +170,6 @@ export function ClientesSection({ clientes, loading, loadClientes, deleteCliente
 														<span className="text-sm text-muted-foreground">Sin centros</span>
 													)}
 												</div>
-											</TableCell>
-											<TableCell className="hidden md:table-cell">
-												<Badge variant={cliente.activo ? "default" : "secondary"}>{cliente.activo ? "Activo" : "Inactivo"}</Badge>
 											</TableCell>
 											<TableCell className="text-right">
 												<DropdownMenu>
